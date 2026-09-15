@@ -84,9 +84,8 @@ def verify_access_token(token: str) -> TokenPayload:
     :raises jwt.InvalidTokenError: token sai định dạng / sai chữ ký / thiếu field
     :return: TokenPayload nếu hợp lệ
     """
-    payload = pyjwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
     try:
-        payload = pyjwt.decode(...)
+        payload = pyjwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
     except pyjwt.ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     except pyjwt.InvalidTokenError:
