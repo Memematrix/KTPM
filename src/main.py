@@ -1,6 +1,11 @@
+from src.common.database import get_db
+from sqlalchemy import select
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
-
+from src import models
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
@@ -16,3 +21,11 @@ async def home(request: Request):
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+@app.get("/api/movies")
+async def get_all_movies(db: Annotated[AsyncSession, Depends(get_db)]):
+    result = await db.execute(select(models.Movie))
+
+    movies = result.scalars().all()
+
+    return movies
