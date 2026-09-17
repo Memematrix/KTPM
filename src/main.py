@@ -1,4 +1,5 @@
 from sys import prefix
+from src.routers import screens
 from src.common.database import get_db, engine, Base
 from sqlalchemy import select
 from fastapi import Depends
@@ -10,6 +11,8 @@ from src import models
 from src.modules.auth import routers
 
 from contextlib import asynccontextmanager
+from src.modules.ordering.routers.food import router as food_router
+from src import models
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -29,6 +32,7 @@ templates = Jinja2Templates(directory="templates")
 
 app.include_router(routers.router, prefix="/api", tags=["auth"])
 
+app.include_router(screens.router, prefix="/api/screens", tags=["screens"])
 
 @app.get("/")
 async def home(request: Request):

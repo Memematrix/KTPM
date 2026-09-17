@@ -1,18 +1,66 @@
 from __future__ import annotations
+from enum import StrEnum
+from sqlalchemy import Uuid
+import uuid
+from sqlalchemy import text
 
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Enum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
 
+class SeatType(StrEnum):
+    standard = "standard"
+    vip = "vip"
+    sweetbox = "sweetbox"
+
 class Movie(Base):
     __tablename__ = "movies"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[str] = mapped_column(Text)
     duration: Mapped[int] = mapped_column(Integer)
     release_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     poster_url: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+
+class Screen(Base):
+    __tablename__ = "screens"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    total_seats: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    seats: Mapped[list[Seat]] = relationship(
+        back_populates="room",
+        cascade="all, delete-orphan"
+    )
+
+class Seat(Base):
+    __tablename__ = "seats"
+    __table_args__ = (
+        UniqueConstraint(
+            "screen_id",
+            "row_letter",
+            "seat_number",
+            name="unique_seat_row_seat"
+        ),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
+    screen_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("screens.id"),
+        index=True
+    )
+    row_letter: Mapped[str] = mapped_column(String, nullable=False)
+    seat_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    type: Mapped[SeatType] = mapped_column(
+        Enum(SeatType, native_enum=False),
+        default=SeatType.standard,
+        nullable=False
+    )
+
+    room: Mapped[Screen] = relationship(
+        back_populates= "seats"
+    )
