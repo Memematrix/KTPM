@@ -17,9 +17,10 @@ from config import settings
 
 import jwt as pyjwt
 
-JWT_SECRET_KEY = settings.secret_key
-JWT_ALGORITHM = "HS256"
+JWT_SECRET_KEY = settings.secret_key.get_secret_value()
+JWT_ALGORITHM = settings.algorithm
 JWT_EXPIRE_MINUTES = settings.jwt_expire_minutes
+
 
 
 class TokenPayload:
