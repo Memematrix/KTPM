@@ -1,5 +1,5 @@
 from sys import prefix
-from src.routers import screens
+from src.routers import screens, seats, showtimes
 from src.common.database import get_db, engine, Base
 from sqlalchemy import select
 from fastapi import Depends
@@ -33,6 +33,8 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(routers.router, prefix="/api", tags=["auth"])
 
 app.include_router(screens.router, prefix="/api/screens", tags=["screens"])
+app.include_router(seats.router, prefix="/api/seats", tags=["seats"])
+app.include_router(showtimes.router, prefix="/api/showtimes", tags=["showtimes"])
 
 @app.get("/")
 async def home(request: Request):

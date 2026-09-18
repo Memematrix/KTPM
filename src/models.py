@@ -1,8 +1,7 @@
 from __future__ import annotations
 from enum import StrEnum
-from sqlalchemy import Uuid
+from sqlalchemy import Uuid, Float
 import uuid
-from sqlalchemy import text
 
 from datetime import UTC, datetime
 
@@ -26,6 +25,10 @@ class Movie(Base):
     poster_url: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
+    showtimes: Mapped[list[Showtime]] = relationship(
+        back_populates="movie"
+    )
+
 class Screen(Base):
     __tablename__ = "screens"
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
@@ -35,6 +38,10 @@ class Screen(Base):
     seats: Mapped[list[Seat]] = relationship(
         back_populates="room",
         cascade="all, delete-orphan"
+    )
+
+    showtimes: Mapped[list[Showtime]] = relationship(
+        back_populates="screen"
     )
 
 class Seat(Base):
@@ -63,4 +70,29 @@ class Seat(Base):
 
     room: Mapped[Screen] = relationship(
         back_populates= "seats"
+    )
+
+class Showtime(Base):
+    __tablename__ = "showtimes"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
+    movie_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("movies.id"),
+        index=True
+    )
+    screen_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("screens.id"),
+        index=True
+    )
+    start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    base_price: Mapped[float] = mapped_column(Float)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+
+    movie: Mapped[Movie] = relationship(
+        back_populates="showtimes"
+    )
+    screen: Mapped[Screen] = relationship(
+        back_populates="showtimes"
     )

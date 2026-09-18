@@ -92,5 +92,3 @@ async def create_seat_of_screen(screen_id: uuid.UUID, seat: SeatCreate, db: Anno
         )
     await db.refresh(new_seat, attribute_names=["room"])
     return new_seat
-
-
