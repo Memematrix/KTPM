@@ -18,7 +18,7 @@ async def get_screens(db: Annotated[AsyncSession, Depends(get_db)]):
     return screens
 
 @router.post("")
-async def create_screen(screen: ScreenCreate, db: Annotated[AsyncSession, Depends(get_db)]):
+async def create_screen(screen: ScreenCreate, db: Annotated[AsyncSession, Depends(get_db)], current_user = Depends(require_role("admin"))):
     new_screen = models.Screen(
         name = screen.name,
         total_seats = screen.total_seats
@@ -30,7 +30,7 @@ async def create_screen(screen: ScreenCreate, db: Annotated[AsyncSession, Depend
     return new_screen
 
 @router.delete("/{screen_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_screen(screen_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]):
+async def delete_screen(screen_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)], current_user = Depends(require_role("admin"))):
     result = await db.execute(select(models.Screen).where(models.Screen.id == screen_id))
     screen = result.scalars().first()
     if not screen:
@@ -57,7 +57,7 @@ async def get_seats_of_screen(screen_id: uuid.UUID, db: Annotated[AsyncSession, 
     return seats
 
 @router.post("/{screen_id}/seats", response_model=SeatResponse)
-async def create_seat_of_screen(screen_id: uuid.UUID, seat: SeatCreate, db: Annotated[AsyncSession, Depends(get_db)]):
+async def create_seat_of_screen(screen_id: uuid.UUID, seat: SeatCreate, db: Annotated[AsyncSession, Depends(get_db)], current_user = Depends(require_role("admin"))):
     result = await db.execute(select(models.Screen).options(selectinload(models.Screen.seats)).where(models.Screen.id == screen_id))
     screen = result.scalars().first()
     if not screen:

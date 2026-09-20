@@ -1,5 +1,6 @@
 
 
+from datetime import datetime
 import uuid
 from pydantic import Field, ConfigDict, BaseModel
 class ScreenBase(BaseModel):
@@ -22,3 +23,21 @@ class SeatResponse(SeatBase):
 
     id: uuid.UUID
     screen_id: uuid.UUID
+
+class ShowtimeBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    base_price: int
+    start_time: datetime
+    end_time: datetime
+
+class ShowtimeCreate(ShowtimeBase):
+    movie_id: uuid.UUID
+    screen_id: uuid.UUID
+
+class ShowtimeResponse(ShowtimeBase):
+    id: uuid.UUID
+    
+class AvailableSeatResponse(BaseModel):
+    showtime: ShowtimeResponse
+    available_seats: list[SeatResponse]

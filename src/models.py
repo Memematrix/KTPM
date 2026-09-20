@@ -96,3 +96,27 @@ class Showtime(Base):
     screen: Mapped[Screen] = relationship(
         back_populates="showtimes"
     )
+    tickets: Mapped[list[Ticket]] = relationship(
+        back_populates="showtime"
+    )
+
+class Ticket(Base):
+    __tablename__ = "tickets"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
+    showtime_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("showtimes.id"),
+        index=True,
+        nullable=False
+    )
+    seat_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("seats.id"),
+        index=True,
+        nullable=False
+    )
+    price: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    showtime: Mapped[Showtime] = relationship(
+        back_populates="tickets"
+    )
