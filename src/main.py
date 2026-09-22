@@ -15,11 +15,11 @@ from src import models
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # Startup
+    # Startup -> scan all models(Base) and create missing db tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    # Shutdown
+    # Shutdown -> close all connection pools
     await engine.dispose()
 
 app = FastAPI(lifespan=lifespan)
