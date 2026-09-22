@@ -13,11 +13,11 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import HTTPException, status
-from config import settings
+from src.config import settings
 
 import jwt as pyjwt
 
-JWT_SECRET_KEY = settings.secret_key
+JWT_SECRET_KEY = settings.secret_key.get_secret_value()
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MINUTES = settings.jwt_expire_minutes
 
