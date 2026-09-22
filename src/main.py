@@ -1,5 +1,5 @@
 from sys import prefix
-from src.routers import screens, seats, showtimes
+from src.modules.scheduling.routers import screens, seats, showtimes
 from src.common.database import get_db, engine, Base
 from sqlalchemy import select
 from fastapi import Depends
@@ -7,9 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
-from src import models
-from src.modules.auth import routers
-
+from src.modules.ordering.routers.food import router as food_router
+from src.modules.scheduling import models
 from contextlib import asynccontextmanager
 from src.modules.ordering.routers.food import router as food_router
 from src import models

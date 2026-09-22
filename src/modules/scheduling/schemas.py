@@ -1,5 +1,3 @@
-
-
 from datetime import datetime
 import uuid
 from pydantic import Field, ConfigDict, BaseModel
@@ -37,7 +35,11 @@ class ShowtimeCreate(ShowtimeBase):
 
 class ShowtimeResponse(ShowtimeBase):
     id: uuid.UUID
+
+class SeatWithStatus(BaseModel):
+    seat: SeatResponse
+    is_available: bool
     
 class AvailableSeatResponse(BaseModel):
     showtime: ShowtimeResponse
-    available_seats: list[SeatResponse]
+    available_seats: list[SeatWithStatus]

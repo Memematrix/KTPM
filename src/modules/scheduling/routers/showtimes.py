@@ -1,3 +1,4 @@
+from src.modules.scheduling.models import Seat
 from src.common.auth.role_guard import require_role
 import uuid
 from datetime import date
@@ -8,9 +9,9 @@ from sqlalchemy import Date, cast, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src import models
+from src.modules.scheduling import models
 from src.common.database import get_db
-from src.schemas import (
+from src.modules.scheduling.schemas import (
     AvailableSeatResponse,
     ShowtimeCreate,
     ShowtimeResponse,
@@ -40,11 +41,13 @@ async def get_showtime_detail(showtime_id: uuid.UUID, db: Annotated[AsyncSession
         )
     booked_seat_ids = {ticket.seat_id for ticket in showtime.tickets}
 
-    available_seats = []
-    for seat in showtime.screen.seats:
-        if seat.id not in booked_seat_ids:
-            available_seats.append(seat)
-    
+    available_seats = [
+        {
+            "seat": seat,
+            "is_available": seat.id not in booked_seat_ids
+        } 
+        for seat in showtime.screen.seats
+    ]
 
     return {
         "showtime": showtime,
