@@ -6,7 +6,10 @@ from typing import Annotated
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
 from src import models
+from src.modules.ordering.routers.food import router as food_router
 app = FastAPI()
+
+app.include_router(food_router, prefix="/food", tags=["food"])
 
 templates = Jinja2Templates(directory="templates")
 
