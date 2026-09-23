@@ -8,7 +8,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
 from src import models
 from src.modules.auth import routers
-
+from src.modules.ordering.routers import food
+    
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
@@ -22,7 +23,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(food_router, prefix="/food", tags=["food"])
+app.include_router(food.router, prefix="/food", tags=["food"])
 
 templates = Jinja2Templates(directory="templates")
 

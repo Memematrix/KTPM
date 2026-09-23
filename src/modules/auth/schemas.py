@@ -21,12 +21,6 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserResponse
-
 class UserResponse(BaseModel):
     # from_attributes=True cho phép tạo trực tiếp từ UserEntity (dataclass),
     # không cần convert thủ công từng field.
@@ -38,4 +32,11 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     role: str
     created_at: datetime
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+
+
     

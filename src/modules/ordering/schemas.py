@@ -1,5 +1,5 @@
 from decimal import Decimal
-
+import uuid
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -17,4 +17,4 @@ class FoodCreate(FoodBase):
 class FoodResponse(FoodBase):
 	model_config = ConfigDict(from_attributes=True)
 
-	id: str
+	id: uuid.UUID
