@@ -15,6 +15,7 @@ from typing import Optional
 from fastapi import HTTPException, status
 from src.config import settings
 
+from uuid import UUID
 import jwt as pyjwt
 
 JWT_SECRET_KEY = settings.secret_key.get_secret_value()
@@ -29,7 +30,7 @@ class TokenPayload:
     tương đương (xem middleware.py -> CurrentUser).
     """
 
-    def __init__(self, user_id: str, role: str):
+    def __init__(self, user_id: UUID, role: str):
         self.id = user_id
         self.role = role
 
@@ -37,7 +38,7 @@ class TokenPayload:
         return f"TokenPayload(id={self.id!r}, role={self.role!r})"
 
 
-def create_access_token(user_id: str, role: str, expires_minutes: Optional[int] = None) -> str:
+def create_access_token(user_id: UUID, role: str, expires_minutes: Optional[int] = None) -> str:
     """
     Tạo JWT sau khi login thành công (dùng ở endpoint POST /auth/login).
 
@@ -93,6 +94,8 @@ def verify_access_token(token: str) -> TokenPayload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     user_id = payload.get("sub")
     role = payload.get("role")
+
+    user_id = UUID(user_id)
 
     if user_id is None or role is None:
         raise pyjwt.InvalidTokenError("Token thiếu field 'sub' hoặc 'role'")
