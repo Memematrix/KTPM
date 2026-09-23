@@ -18,16 +18,8 @@ async def get_food(db: Annotated[AsyncSession, Depends(get_db)]):
     return result.scalars().all()
 
 
-@router.post(
-    "",
-    response_model=FoodResponse,
-    status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_role("admin"))],
-)
-async def create_food(
-    food: FoodCreate,
-    db: Annotated[AsyncSession, Depends(get_db)],
-):
+@router.post("", response_model=FoodResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_role("admin"))],)
+async def create_food(food: FoodCreate, db: Annotated[AsyncSession, Depends(get_db)],):
     new_food = models.Food(**food.model_dump())
     db.add(new_food)
     await db.commit()

@@ -23,7 +23,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(food_router, prefix="/food", tags=["food"])
+app.include_router(food.router, prefix="/food", tags=["food"])
 
 templates = Jinja2Templates(directory="templates")
 
