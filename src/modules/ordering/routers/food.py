@@ -1,5 +1,5 @@
 from typing import Annotated
-
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +28,7 @@ async def create_food(food: FoodCreate, db: Annotated[AsyncSession, Depends(get_
 
 
 @router.delete("/{food_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_role("admin"))],)
-async def delete_food(food_id: str, db: Annotated[AsyncSession, Depends(get_db)]):
+async def delete_food(food_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.Food).where(models.Food.id == food_id))
     food = result.scalar_one_or_none()
     if food is None:

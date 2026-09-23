@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
-from src.modules.ordering.routers.food import router as food_router
+from src.modules.ordering.routers import food
 from src.modules.scheduling import models
 from contextlib import asynccontextmanager
 from src.modules.auth import routers
