@@ -16,7 +16,6 @@ class RegisterRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     phone: Optional[str] = Field(default=None, max_length=20)
 
-
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -32,11 +31,8 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     role: str
     created_at: datetime
-
+    
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
-
-
-    

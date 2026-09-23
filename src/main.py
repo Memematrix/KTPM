@@ -1,4 +1,5 @@
 from sys import prefix
+from src.modules.scheduling.routers import screens, seats, showtimes
 from src.common.database import get_db, engine, Base
 from sqlalchemy import select
 from fastapi import Depends
@@ -6,19 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
-from src import models
-from src.modules.auth import routers
-from src.modules.ordering.routers import food
-    
+from src.modules.ordering.routers.food import router as food_router
+from src.modules.scheduling import models
 from contextlib import asynccontextmanager
+from src.modules.auth import routers
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    # Startup
+    # Startup -> scan all models(Base) and create missing db tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
-    # Shutdown
+    # Shutdown -> close all connection pools
     await engine.dispose()
 
 app = FastAPI(lifespan=lifespan)
@@ -30,6 +30,9 @@ templates = Jinja2Templates(directory="templates")
 
 app.include_router(routers.router, prefix="/api", tags=["auth"])
 
+app.include_router(screens.router, prefix="/api/screens", tags=["screens"])
+app.include_router(seats.router, prefix="/api/seats", tags=["seats"])
+app.include_router(showtimes.router, prefix="/api/showtimes", tags=["showtimes"])
 
 @app.get("/")
 async def home(request: Request):

@@ -13,7 +13,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from fastapi import HTTPException, status
-from src.config import settings
+from src.common.config import settings
 
 from uuid import UUID
 import jwt as pyjwt

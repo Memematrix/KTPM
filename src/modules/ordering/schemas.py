@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class FoodBase(BaseModel):
 	name: str = Field(min_length=1, max_length=255)
 	description: str | None = None
-	price: Decimal = Field(ge=0)
+	price: Decimal = Field(ge=Decimal(0))
 	image_url: str | None = None
 
 
