@@ -16,16 +16,9 @@ class RegisterRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     phone: Optional[str] = Field(default=None, max_length=20)
 
-
 class LoginRequest(BaseModel):
     username: str
     password: str
-
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserResponse
 
 class UserResponse(BaseModel):
     # from_attributes=True cho phép tạo trực tiếp từ UserEntity (dataclass),
@@ -39,3 +32,7 @@ class UserResponse(BaseModel):
     role: str
     created_at: datetime
     
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
