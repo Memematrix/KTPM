@@ -1,5 +1,4 @@
 from sys import prefix
-from src.modules.auth import routers
 from src.common.database import get_db, engine, Base
 from sqlalchemy import select
 from fastapi import Depends
@@ -7,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
-from src.modules.auth import models
+from src import models
+from src.modules.auth import routers
+
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
@@ -22,6 +23,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 templates = Jinja2Templates(directory="templates")
+
 
 app.include_router(routers.router, prefix="/api", tags=["auth"])
 
