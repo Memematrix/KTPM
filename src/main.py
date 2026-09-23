@@ -10,8 +10,7 @@ from fastapi import FastAPI, Request
 from src.modules.ordering.routers.food import router as food_router
 from src.modules.scheduling import models
 from contextlib import asynccontextmanager
-from src.modules.ordering.routers.food import router as food_router
-from src import models
+from src.modules.auth import routers
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
