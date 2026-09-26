@@ -1,3 +1,7 @@
+from fastapi import status
+from fastapi import HTTPException
+from sqlalchemy.orm import selectinload
+import uuid
 from sys import prefix
 from src.modules.scheduling.routers import screens, seats, showtimes
 from src.common.database import get_db, engine, Base
@@ -46,3 +50,69 @@ async def home(request: Request):
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+@app.get("/movies")
+async def get_all_movies(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
+    result = await db.execute(select(models.Movie))
+    movies = result.scalars().all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="movies.html",
+        context= {
+            "movies": movies
+        }
+    )
+
+@app.get("/movies/{movie_id}")
+async def get_movie_detail(movie_id: uuid.UUID, request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
+    result = await db.execute(select(models.Movie).options(selectinload(models.Movie.showtimes)).where(models.Movie.id == movie_id))
+    movie = result.scalars().first()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="movie_detail.html",
+        context= {
+            "movie": movie
+        }
+    )
+@app.get("/showtimes")
+async def get_all_showtimes(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
+    result = await db.execute(select(models.Showtime))
+    showtimes = result.scalars().all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="showtimes.html",
+        context= {
+            "showtimes": showtimes
+        }
+    )
+
+@app.get("/showtimes/{showtime_id}", name="get_showtime_detail_html")
+async def get_showtime_detail(request: Request, showtime_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]):
+    result = await db.execute(select(models.Showtime).where(models.Showtime.id == showtime_id).options(selectinload(models.Showtime.screen).selectinload(models.Screen.seats), selectinload(models.Showtime.tickets)))
+    showtime = result.scalars().first()
+    if not showtime:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Showtime not exist"
+        )
+    booked_seat_ids = {ticket.seat_id for ticket in showtime.tickets}
+
+    available_seats = [
+        {
+            "seat": seat,
+            "is_available": seat.id not in booked_seat_ids
+        } 
+        for seat in showtime.screen.seats
+    ]
+
+    return templates.TemplateResponse(
+        request=request,
+        name="showtime_detail.html",
+        context= {
+        "showtime": showtime,
+        "available_seats": available_seats
+        }
+    )

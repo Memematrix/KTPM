@@ -1,0 +1,50 @@
+{% extends "layout.html" %} {% block content %}
+<div class="w-[50%] mx-auto mt-[15%]">
+  <div class="flex flex-wrap gap-3 items-center justify-center">
+    {% for item in available_seats %} {% set code = item.seat.row_letter ~
+    item.seat.seat_number %}
+    <div
+      class="seat w-10 h-10 select-none {{ 'bg-green-500 hover:bg-green-800' if item.is_available else 'bg-red-500 cursor-not-allowed' }}"
+      data-seat-id="{{ item.seat.id }}"
+      data-seat-code="{{ code }}"
+    >
+      <p>{{ item.seat.row_letter }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="flex gap-1">
+    <p>Selected: </p>
+    <div id="selected-display"></div>
+  </div>
+</div>
+<script>
+  const seats = document.querySelectorAll(".seat");
+  const selectedSeats = new Set();
+  const selectedDisplay = document.getElementById("selected-display");
+  seats.forEach((item) => {
+    item.addEventListener("click", () => {
+      if (!item.classList.contains("cursor-not-allowed")) {
+        const code = item.dataset.seatCode;
+        console.log(code);
+        if (selectedSeats.has(code)) {
+          selectedSeats.delete(code);
+          item.classList.remove("bg-blue-500");
+          item.classList.add("bg-green-500");
+        } else {
+          selectedSeats.add(code);
+          item.classList.remove("bg-green-500");
+          item.classList.add("bg-blue-500");
+        }
+        if (selectedSeats.size > 0) {
+          selectedDisplay.textContent = Array.from(selectedSeats).join(", ");
+          bookBtn.disabled = false;
+        } else {
+          selectedDisplay.textContent = "None";
+          bookBtn.disabled = true;
+        }
+      }
+    });
+  });
+</script>
+
+{% endblock content %}

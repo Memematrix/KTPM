@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>{{movie.title}}</h1>
+    <h2>{{movie.description}}</h2>
+    <div class="flex flex-col gap-3">
+        <h3>Showtimes</h3>
+        {% for showtime in movie.showtimes %}
+        <div class="bg-green-500" >
+            <h4>{{ showtime.start_time }}</h4>
+            <h4>{{ showtime.end_time }}</h4>
+            <h4>{{ showtime.base_price }}</h4>
+            <a href="{{ url_for('get_showtime_detail_html', showtime_id=showtime.id) }}" >Pick this</a>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock content %}
