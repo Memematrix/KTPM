@@ -57,5 +57,4 @@ class User(Base):
         default=datetime.utcnow,
         nullable=False,
     )
-    
     orders: Mapped[list["Orders"]] = relationship(back_populates="user", cascade="all, delete-orphan")

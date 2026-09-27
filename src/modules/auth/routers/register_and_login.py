@@ -15,11 +15,11 @@ from src.common.auth.middleware import get_current_user, CurrentUser
 from src.common.auth.role_guard import require_role
 from src.common.auth.hash_pw import hash_password as hashpw, verify_password
 
-from .schemas import RegisterRequest, LoginRequest, TokenResponse, UserResponse
-from .models import User
+from src.modules.auth.schemas import RegisterRequest, LoginRequest, TokenResponse, UserResponse
+from src.modules.auth.models import User
 
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter()
 
 
 
