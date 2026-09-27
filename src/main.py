@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
-from src.modules.ordering.routers import food
+from src.modules.ordering.routers import food, orders
 from src.modules.scheduling import models
 from contextlib import asynccontextmanager
 from src.modules.auth import routers
@@ -24,6 +24,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(food.router, prefix="/food", tags=["food"])
+app.include_router(orders.router, prefix="/orders", tags=["orders"])
 
 templates = Jinja2Templates(directory="templates")
 

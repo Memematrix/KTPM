@@ -39,3 +39,4 @@ async def delete_food(food_id: uuid.UUID, db: Annotated[AsyncSession, Depends(ge
 
     await db.delete(food)
     await db.commit()
+    
