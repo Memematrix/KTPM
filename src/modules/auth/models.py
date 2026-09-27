@@ -10,7 +10,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, String, Uuid
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
 
@@ -57,3 +57,4 @@ class User(Base):
         default=datetime.utcnow,
         nullable=False,
     )
+    orders: Mapped[list["Orders"]] = relationship(back_populates="user", cascade="all, delete-orphan")
