@@ -1,0 +1,34 @@
+{% extends "layout.html" %} {% block content %}
+<h1>Username <span id="field-username"></span></h1>
+<h1>Name: <span id="field-name"></span></h1>
+<h1>Phone number: <span id="field-phone"></span></h1>
+<h1></h1>
+<script type="module">
+  import { getCurrentUser, getCachedUser } from "/static/auth.js";
+  const fields = document.querySelectorAll("[id^='field-']");
+  const hasToken = !!localStorage.getItem("access_token");
+  if (!hasToken) {
+    window.location.replace("/");
+  }
+
+  function renderUser(user) {
+    if (!user) {
+      return;
+    }
+    fields.forEach((item) => {
+      const key = item.id.replace("field-", "");
+      item.textContent = user[key];
+    });
+  }
+
+  renderUser(getCachedUser());
+
+  async function loadAccountDetail() {
+    const user = await getCurrentUser();
+    if (!!user) {
+      renderUser(user);
+    }
+  }
+  loadAccountDetail();
+</script>
+{% endblock content %}

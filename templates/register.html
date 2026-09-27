@@ -1,0 +1,99 @@
+{% extends "layout.html" %} {% block content %}
+<h1>Register</h1>
+<form id="register-form">
+  <div>
+    <input
+      type="text"
+      id="username"
+      name="username"
+      placeholder="Enter username"
+      required
+    />
+    <p id="error-username" class="text-red-500 text-sm mt-1"></p>
+  </div>
+  <div>
+    <input
+      type="text"
+      id="password"
+      name="password"
+      placeholder="Enter password"
+      required
+    />
+    <p id="error-password" class="text-red-500 text-sm mt-1"></p>
+  </div>
+  <div>
+    <input
+      type="text"
+      id="name"
+      name="name"
+      placeholder="Enter name"
+      required
+    />
+    <p id="error-name" class="text-red-500 text-sm mt-1"></p>
+  </div>
+  <div>
+    <input
+      type="number"
+      id="phone"
+      name="phone"
+      placeholder="Enter phone number"
+      required
+    />
+    <p id="error-phone" class="text-red-500 text-sm mt-1"></p>
+  </div>
+  <button type="submit">Submit</button>
+</form>
+<script type="module">
+  const hasToken = !!localStorage.getItem("access_token");
+  if (hasToken) {
+    window.location.replace("/");
+  }
+</script>
+<script>
+  const form = document.getElementById("register-form");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    console.log(data);
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        alert("Register successfully!!! Please log in");
+        window.location.replace("/");
+      } else {
+        const error = await res.json();
+        console.log(error);
+        document
+          .querySelectorAll("[id^='error-']")
+          .forEach((el) => (el.textContent = ""));
+        if (Array.isArray(error.detail)) {
+          error.detail.forEach((err) => {
+            const field = err.loc[err.loc.length - 1];
+            const errorElement = document.getElementById(`error-${field}`);
+            if (errorElement) {
+              errorElement.textContent = err.msg;
+            }
+          });
+        } else if (typeof error.detail === "string") {
+          if (error.detail.toLowerCase().includes("username")) {
+            document.getElementById("error-username").textContent =
+              error.detail;
+          } else {
+            alert(error.detail);
+          }
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
+</script>
+{% endblock content %}

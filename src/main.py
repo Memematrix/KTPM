@@ -1,3 +1,4 @@
+from fastapi.staticfiles import StaticFiles
 from fastapi import status
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
@@ -30,6 +31,8 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(food.router, prefix="/food", tags=["food"])
 
 templates = Jinja2Templates(directory="templates")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 app.include_router(register_and_login.router, prefix="/api/auth", tags=["auth"])
@@ -115,4 +118,25 @@ async def get_showtime_detail(request: Request, showtime_id: uuid.UUID, db: Anno
         "showtime": showtime,
         "available_seats": available_seats
         }
+    )
+
+@app.get("/login", name="login_html", include_in_schema=False)
+async def login(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="login.html"
+    )
+
+@app.get("/register", name="register_html", include_in_schema=False)
+async def register(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="register.html"
+    )
+
+@app.get("/me", name="account_html", include_in_schema=False)
+async def register(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="account.html"
     )
