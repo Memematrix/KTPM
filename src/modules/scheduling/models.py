@@ -9,6 +9,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Enum, Unique
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
+# from src.modules.auth.models import Review
 
 class SeatType(StrEnum):
     standard = "standard"
@@ -25,6 +26,10 @@ class Movie(Base):
     poster_url: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
+    # reviews: Mapped[list[Review]] = relationship(
+    #     "Review",
+    #     back_populates="movie",
+    # )
     showtimes: Mapped[list[Showtime]] = relationship(
         back_populates="movie"
     )

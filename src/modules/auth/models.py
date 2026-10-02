@@ -9,9 +9,10 @@ types — Service và Router không đụng tới file này trực tiếp.
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, Uuid
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, String, Uuid, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+# from src.modules.scheduling.models import Movie
 from src.common.database import Base
 
 
@@ -57,3 +58,52 @@ class User(Base):
         default=datetime.utcnow,
         nullable=False,
     )
+
+    reviews: Mapped[list[Review]] = relationship(
+        "Review",
+        back_populates="user"
+    )
+
+
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    movie_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("movies.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    rating: Mapped[int] = mapped_column(
+        nullable=False,
+    )
+
+    comment: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.utcnow,
+    )
+
+    user: Mapped[User] = relationship(
+        "User",
+        back_populates="reviews",
+    )
+
+    # movie: Mapped[Movie] = relationship(
+    #     "Movie",
+    #     back_populates="reviews",
+    # )

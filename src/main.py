@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request
 from src.modules.ordering.routers import food
 from src.modules.scheduling import models
 from contextlib import asynccontextmanager
-from src.modules.auth.routers import register_and_login, movies
+from src.modules.auth.routers import register_and_login, movies, reviews
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -30,6 +30,7 @@ templates = Jinja2Templates(directory="templates")
 
 app.include_router(register_and_login.router, prefix="/api/auth", tags=["auth"])
 app.include_router(movies.router, prefix="/api/movies", tags=["movies"])
+app.include_router(reviews.router, prefix="/api", tags=["reviews"])
 
 app.include_router(screens.router, prefix="/api/screens", tags=["screens"])
 app.include_router(seats.router, prefix="/api/seats", tags=["seats"])
