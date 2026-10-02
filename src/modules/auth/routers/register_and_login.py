@@ -23,7 +23,6 @@ router = APIRouter()
 
 
 
-
 @router.post(
     "/register",
     response_model=UserResponse,
