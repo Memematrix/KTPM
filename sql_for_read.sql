@@ -103,11 +103,8 @@ create table public.tickets (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- FIX: chỉ chống trùng ghế đối với vé đang "sống" (pending/confirmed).
--- Vé đã cancelled thì ghế được thả ra cho người khác đặt lại.
-create unique index tickets_active_seat_unique
-  on public.tickets (showtime_id, seat_id)
-  where status in ('pending', 'confirmed');
+alter table public.tickets
+  add constraint tickets_showtime_seat_unique unique (showtime_id, seat_id);
 
 -- 9. Order_Food
 create table public.order_food (

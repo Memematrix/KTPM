@@ -199,14 +199,13 @@ erDiagram
 | `seat_id` | uuid | NOT NULL, FK → `seats.id` | Vé cho ghế nào |
 | `price` | numeric | NOT NULL | Giá vé thực tế tại thời điểm đặt (chốt giá, không đổi dù `showtimes.base_price` sau này đổi) |
 
+Ràng buộc bắt buộc: `UNIQUE (showtime_id, seat_id)` để không thể bán cùng một ghế hai lần trong một suất chiếu.
+
 **Quan hệ:** đây là bảng trung tâm nối `orders` ↔ `showtimes` ↔ `seats`. Mỗi dòng = "1 ghế cụ thể trong 1 suất chiếu cụ thể đã được bán trong đơn nào".
 
-🚩 **Rủi ro quan trọng:** hiện **không có UNIQUE constraint trên `(showtime_id, seat_id)`**. Điều này có nghĩa là về mặt DB, 2 người có thể đặt trùng cùng 1 ghế cho cùng 1 suất chiếu mà không bị chặn — hệ thống phải tự kiểm tra bằng tay ở tầng service (trong transaction). Khuyến nghị: thêm
+🚩 **Ràng buộc chống đặt trùng:** bảng phải có **UNIQUE constraint trên `(showtime_id, seat_id)`**. API cũng kiểm tra ghế trong transaction và khóa dòng `showtimes` để serialize các booking đồng thời.
 
-```sql
-ALTER TABLE tickets ADD CONSTRAINT tickets_showtime_seat_unique UNIQUE (showtime_id, seat_id);
-```
-để DB tự chặn trùng ghế, tránh phụ thuộc hoàn toàn vào logic ứng dụng (an toàn hơn khi có nhiều request đồng thời).
+Tên constraint sử dụng trong schema SQL là `tickets_showtime_seat_unique`, để DB tự chặn trùng ghế và tránh phụ thuộc hoàn toàn vào logic ứng dụng.
 
 ### 3.9. `order_food` — Món ăn trong đơn hàng
 | Cột | Kiểu | Ràng buộc | Ghi chú |
