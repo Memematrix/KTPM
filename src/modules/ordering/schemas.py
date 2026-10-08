@@ -4,9 +4,9 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
-# ==========================================
+# ============
 # FOOD SCHEMAS
-# ==========================================
+# ============
 class FoodBase(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     description: str | None = None
