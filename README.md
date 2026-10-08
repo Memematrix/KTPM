@@ -1,8 +1,40 @@
 # Hệ thống bán vé xem phim
 
-Đồ án Kỹ thuật phần mềm xây dựng ứng dụng quản lý và bán vé xem phim. Hệ thống cung cấp API để quản lý tài khoản, danh mục phim, phòng chiếu, ghế, lịch chiếu, đánh giá và đồ ăn.
+## Giới thiệu hệ thống
 
-Phiên bản hiện tại tập trung vào backend. Trang chủ chỉ là giao diện mẫu; các chức năng được sử dụng và kiểm tra qua Swagger UI hoặc công cụ gọi HTTP API. Luồng đặt vé, tạo đơn hàng và thanh toán đang nằm trong định hướng phát triển, chưa có API triển khai.
+Bài tập lớn Kiến trúc phần mềm xây dựng ứng dụng quản lý và bán vé xem phim, phục vụ hai nhóm người dùng chính: khách hàng và quản trị viên rạp. Hệ thống hướng đến việc tập trung dữ liệu phim, phòng chiếu, ghế, lịch chiếu và dịch vụ đồ ăn, từ đó hỗ trợ khách hàng lựa chọn suất chiếu và tạo nền tảng cho quy trình đặt vé trực tuyến.
+
+### Bối cảnh và bài toán cần giải quyết
+
+Trong hoạt động của một rạp phim, mỗi phim có thể được chiếu ở nhiều khung giờ và nhiều phòng. Mỗi phòng có sơ đồ ghế, sức chứa và các loại ghế riêng. Vì vậy, việc bán vé phải xác định chính xác **phim nào, suất chiếu nào, phòng nào và ghế nào**, đồng thời bảo đảm lịch chiếu và tình trạng ghế luôn nhất quán.
+
+Nếu thông tin được quản lý thủ công hoặc nằm ở nhiều nơi riêng biệt, khách hàng có thể khó tra cứu giờ chiếu, không biết ghế còn trống hay phải liên hệ nhân viên để xác nhận. Phía rạp có thể gặp sai sót khi cập nhật lịch, xếp hai suất chiếu trùng giờ trong cùng phòng hoặc ghi nhận cùng một ghế cho nhiều khách. Khi có thêm đồ ăn, thay đổi lịch hay giao dịch bị gián đoạn, việc đối chiếu dữ liệu càng phức tạp.
+
+Bài toán của hệ thống là cung cấp một nguồn dữ liệu tập trung để khách hàng tra cứu thông tin và để quản trị viên tổ chức hoạt động rạp. Với luồng bán vé hoàn chỉnh, hệ thống còn phải bảo đảm một ghế chỉ được bán một lần trong một suất chiếu và thông tin đơn hàng, thanh toán, vé luôn khớp nhau.
+
+### Mục tiêu và nhu cầu sử dụng
+
+- **Đối với khách hàng:** xem thông tin phim, tìm suất chiếu theo ngày, kiểm tra tình trạng ghế và tham khảo đánh giá. Mục tiêu phát triển tiếp theo là cho phép chọn ghế, mua kèm đồ ăn, thanh toán và nhận vé trực tuyến.
+- **Đối với quản trị viên:** quản lý tập trung danh mục phim, phòng, sơ đồ ghế, lịch chiếu và đồ ăn; phát hiện dữ liệu không hợp lệ trước khi đưa vào sử dụng.
+- **Đối với việc quản lý dữ liệu:** liên kết rõ tài khoản, phim, phòng, ghế và suất chiếu; phân quyền thao tác để khách hàng không thể tự sửa lịch chiếu, giá vé hoặc dữ liệu quản trị.
+
+### Những vấn đề hệ thống cần xử lý
+
+1. **Xung đột lịch chiếu và sức chứa phòng.** Hai suất chiếu không được chồng lấn thời gian trong cùng phòng; số ghế không được vượt sức chứa và vị trí ghế không được trùng. Khi hoàn thiện nghiệp vụ, cần xét thêm thời lượng phim và khoảng nghỉ để dọn phòng giữa hai suất.
+2. **Nhiều khách chọn cùng một ghế.** Ví dụ, hai khách cùng thấy ghế A1 còn trống và cùng gửi yêu cầu đặt vé. Kết quả tra cứu trước đó không đủ để bảo đảm ghế vẫn còn tại thời điểm mua. Luồng đặt vé cần kiểm tra và ghi nhận trong giao dịch database, kết hợp ràng buộc chống trùng theo cặp suất chiếu–ghế. Một ghế có thể được bán ở các suất khác nhau, nhưng không được bán hai lần trong cùng suất.
+3. **Giữ ghế nhưng không hoàn tất giao dịch.** Khách có thể chọn ghế rồi thoát ứng dụng hoặc thanh toán quá lâu. Nếu bổ sung giữ ghế, hệ thống cần thời hạn giữ và cơ chế giải phóng ghế khi hết hạn, đồng thời xử lý trường hợp thanh toán đến sau khi ghế đã được giải phóng.
+4. **Đơn hàng và thanh toán không đồng bộ.** Mất kết nối có thể khiến khách đã thanh toán nhưng chưa nhận vé; yêu cầu gửi lại hoặc thông báo thanh toán lặp có thể dẫn đến tạo nhiều vé. Phần thanh toán cần quản lý trạng thái đơn hàng, xử lý lặp an toàn và có cách đối chiếu kết quả trước khi xác nhận vé.
+5. **Thay đổi dữ liệu đang được sử dụng.** Việc xóa phim, phòng, ghế hoặc suất chiếu có dữ liệu liên quan có thể gây lỗi hoặc làm mất thông tin cần đối chiếu. Hệ thống cần quy định khi nào được sửa/xóa, khi nào phải ngừng bán hoặc hủy suất; khi đã có đơn hàng, cần bảo toàn giá và thông tin giao dịch tại thời điểm mua.
+6. **Phân quyền và kiểm tra dữ liệu đầu vào.** Hệ thống cần bảo vệ mật khẩu, xác thực người gọi API và kiểm tra quyền trên từng thao tác. Khách hàng chỉ được xóa đánh giá của mình, còn thao tác quản lý rạp thuộc về admin. Dữ liệu như ngày giờ, loại ghế, giá tiền và điểm đánh giá cần được kiểm tra thống nhất.
+7. **Tải truy cập và thông tin ghế thay đổi nhanh.** Khi nhiều khách tra cứu cùng lúc, API cần phản hồi ổn định mà vẫn giữ dữ liệu chính xác. Khi mở rộng, cần xem xét phân trang, tối ưu truy vấn và cập nhật tình trạng ghế; kiểm tra khả năng đáp ứng bằng đo đạc thực tế.
+
+### Phạm vi của phiên bản hiện tại
+
+Repo hiện tập trung vào backend, cung cấp API cho tài khoản và phân quyền, phim, đánh giá, phòng chiếu, ghế, suất chiếu và đồ ăn. Code đã có các kiểm tra như trùng vị trí ghế, giới hạn sức chứa, lịch chiếu chồng lấn và quyền xóa đánh giá. API chi tiết suất chiếu đọc tình trạng ghế từ các bản ghi vé hiện có.
+
+Các API đặt vé, giữ ghế, tạo đơn hàng, thanh toán và hủy vé **chưa được triển khai**. Những vấn đề về đặt đồng thời, hết hạn giữ ghế và đồng bộ thanh toán ở trên là yêu cầu cho giai đoạn hoàn thiện, chưa phải khả năng đã có của hệ thống. Các phép kiểm tra hiện tại cũng chưa đủ để khẳng định hệ thống đã xử lý an toàn mọi yêu cầu ghi đồng thời.
+
+Trang chủ hiện chỉ là giao diện mẫu; các chức năng được sử dụng và kiểm tra qua Swagger UI hoặc công cụ gọi HTTP API. Phiên bản này cung cấp dữ liệu nền và các nghiệp vụ quản lý cơ bản để tiếp tục xây dựng luồng bán vé hoàn chỉnh.
 
 ## 1. Công nghệ sử dụng
 
@@ -143,7 +175,7 @@ JWT_EXPIRE_MINUTES=60
 ```
 
 - `DATABASE_URL`: URL PostgreSQL dùng driver `asyncpg`. Với Supabase, thay bằng thông tin kết nối của dự án và đúng cổng của loại kết nối được chọn; mẫu hiện có sử dụng pooler cổng `6543`.
-- `SECRET_KEY`: khóa ký JWT. **File `.env.example` hiện ghi `JWT_SECRET_KEY`, nhưng code đọc `SECRET_KEY`; cần đổi tên biến này trong `.env`.**
+- `SECRET_KEY`: khóa ký JWT.
 - `JWT_EXPIRE_MINUTES`: thời hạn access token theo phút.
 - JWT hiện được ký và kiểm tra bằng `HS256`. Dù settings có trường `algorithm`, mã JWT hiện dùng trực tiếp hằng số `HS256`.
 - `SUPABASE_URL`, `SUPABASE_KEY`, `SUPABASE_JWT_SECRET` trong file mẫu chưa được sử dụng bởi luồng API hiện tại; kết nối dữ liệu dùng `DATABASE_URL`.
@@ -209,33 +241,3 @@ Kiểm tra phản hồi của API bằng PowerShell:
 ```powershell
 Invoke-RestMethod -Uri 'http://localhost:8000/health'
 ```
-
-Quy trình thử trên Swagger UI:
-
-1. Gọi `POST /api/auth/register` để tạo tài khoản.
-2. Gọi `POST /api/auth/login`, sao chép `access_token` trong response.
-3. Chọn **Authorize**, dán token vào ô HTTP Bearer rồi xác nhận.
-4. Gọi `GET /api/auth/me` để kiểm tra đăng nhập.
-5. Dùng tài khoản admin để tạo phim, phòng, ghế, suất chiếu và đồ ăn; sau đó thử các API tra cứu và đánh giá.
-
-### 4.6. Chuẩn bị tài khoản quản trị để thử nghiệm
-
-API đăng ký luôn tạo tài khoản `customer`; hiện chưa có API cấp quyền quản trị. Trong database phát triển, sau khi đăng ký một tài khoản riêng, có thể cấp quyền bằng SQL:
-
-```sql
-UPDATE users
-SET role = 'admin'
-WHERE username = 'admin_demo';
-```
-
-Thay `admin_demo` bằng tên tài khoản đã đăng ký. Đăng nhập lại sau khi đổi quyền để lấy token mới, vì vai trò được lưu trong JWT.
-
-### 4.7. Các điểm cần kiểm tra khi không chạy được
-
-- **Thiếu `secret_key`:** kiểm tra `.env` sử dụng `SECRET_KEY`, không phải `JWT_SECRET_KEY`.
-- **Không kết nối được database:** kiểm tra host, cổng, tên database, tài khoản, mật khẩu và khả năng truy cập từ môi trường đang chạy API.
-- **Không tìm thấy `src` hoặc template:** chạy lệnh từ thư mục gốc repository.
-- **API quản trị trả `403`:** kiểm tra vai trò tài khoản và đăng nhập lại sau khi đổi quyền.
-- **Database có cấu trúc cũ:** đối chiếu các model hiện tại; `create_all()` không thực hiện migration cho bảng sẵn có.
-
-Tài liệu bổ sung trong repository: `database-schema.md` và `ke-hoach-du-an-ban-ve-phim.md`. Đây là tài liệu thiết kế/kế hoạch; phạm vi API đã triển khai được mô tả ở phần 3 và sinh tự động tại `/docs`.
