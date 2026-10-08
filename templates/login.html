@@ -1,0 +1,57 @@
+{% extends "layout.html" %} {% block content %}
+<h1>Login</h1>
+<form id="login-form">
+  <input
+    type="text"
+    id="username"
+    name="username"
+    placeholder="Enter username"
+    required
+  />
+  <input
+    type="text"
+    id="password"
+    name="password"
+    placeholder="Enter password"
+    required
+  />
+  <button type="submit">Submit</button>
+</form>
+<script type="module">
+  const hasToken = !!localStorage.getItem("access_token");
+  if (hasToken) {
+    window.location.replace("/");
+  }
+</script>
+<script>
+  const form = document.getElementById("login-form");
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    console.log(data);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        console.log(result);
+        localStorage.setItem("access_token", result.access_token);
+        localStorage.setItem("user", JSON.stringify(result.user));
+        alert("Login successfully!!! Press ok to back home");
+        window.location.replace("/");
+      } else {
+        const error = await res.json();
+        alert(error.detail);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
+</script>
+{% endblock content %}

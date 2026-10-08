@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>All currently airing movies!!!</h1>
+    <div class="flex flex-col gap-3">
+        {% for movie in movies %}
+        <div>
+            <h2 class="bg-green-500 inline" >{{movie.title}}</h2>
+            <a href="{{ url_for('get_movie_detail', movie_id=movie.id) }}" >Movie detail</a>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock content %}

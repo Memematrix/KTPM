@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Document</title>
+  </head>
+  <body class="px-3">
+    <nav class="flex justify-between bg-gray-700 text-white">
+      <a href="/">Home</a>
+      <div>
+      <button id="logout-button" class="hidden cursor-pointer">Logout</button>
+      <a id="login-link" class="hidden cursor-pointer" href="{{ url_for('login_html') }}">Login</a>
+      <a id="register-link" class="hidden cursor-pointer" href="{{ url_for('register_html') }}">Register</a>
+      <a id="account-link" class="hidden cursor-pointer" href="{{ url_for('account_html') }}">Me</a>
+      </div>
+    </nav>
+    {% block content %} {% endblock content %}
+    <script type="module">
+      import { getCurrentUser, logout } from "/static/auth.js";
+
+      const logoutBtn = document.getElementById("logout-button");
+      const loginLink = document.getElementById("login-link");
+      const accountLink = document.getElementById("account-link");
+      const registerLink = document.getElementById("register-link");
+
+      function renderAuthState(isLoggedIn) {
+        if (isLoggedIn) {
+          loginLink.classList.add("hidden");
+          registerLink.classList.add("hidden");
+          logoutBtn.classList.remove("hidden");
+          accountLink.classList.remove("hidden");
+        } else {
+          loginLink.classList.remove("hidden");
+          registerLink.classList.remove("hidden");
+          logoutBtn.classList.add("hidden");
+          accountLink.classList.add("hidden");
+        }
+      }
+
+      const hasToken = !!localStorage.getItem("access_token");
+      renderAuthState(hasToken);
+
+      async function updateUI() {
+        const user = await getCurrentUser();
+        renderAuthState(!!user);
+      }
+
+      updateUI();
+
+      logoutBtn.addEventListener("click", () => {
+        logout();
+      });
+    </script>
+  </body>
+</html>
