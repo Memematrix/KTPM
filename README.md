@@ -8,8 +8,6 @@ Bài tập lớn Kiến trúc phần mềm xây dựng ứng dụng quản lý v
 
 Trong hoạt động của một rạp phim, mỗi phim có thể được chiếu ở nhiều khung giờ và nhiều phòng. Mỗi phòng có sơ đồ ghế, sức chứa và các loại ghế riêng. Vì vậy, việc bán vé phải xác định chính xác **phim nào, suất chiếu nào, phòng nào và ghế nào**, đồng thời bảo đảm lịch chiếu và tình trạng ghế luôn nhất quán.
 
-Nếu thông tin được quản lý thủ công hoặc nằm ở nhiều nơi riêng biệt, khách hàng có thể khó tra cứu giờ chiếu, không biết ghế còn trống hay phải liên hệ nhân viên để xác nhận. Phía rạp có thể gặp sai sót khi cập nhật lịch, xếp hai suất chiếu trùng giờ trong cùng phòng hoặc ghi nhận cùng một ghế cho nhiều khách. Khi có thêm đồ ăn, thay đổi lịch hay giao dịch bị gián đoạn, việc đối chiếu dữ liệu càng phức tạp.
-
 Bài toán của hệ thống là cung cấp một nguồn dữ liệu tập trung để khách hàng tra cứu thông tin và để quản trị viên tổ chức hoạt động rạp. Với luồng bán vé hoàn chỉnh, hệ thống còn phải bảo đảm một ghế chỉ được bán một lần trong một suất chiếu và thông tin đơn hàng, thanh toán, vé luôn khớp nhau.
 
 ### Mục tiêu và nhu cầu sử dụng
@@ -20,19 +18,16 @@ Bài toán của hệ thống là cung cấp một nguồn dữ liệu tập tru
 
 ### Những vấn đề hệ thống cần xử lý
 
-1. **Xung đột lịch chiếu và sức chứa phòng.** Hai suất chiếu không được chồng lấn thời gian trong cùng phòng; số ghế không được vượt sức chứa và vị trí ghế không được trùng. Khi hoàn thiện nghiệp vụ, cần xét thêm thời lượng phim và khoảng nghỉ để dọn phòng giữa hai suất.
+1. **Xung đột lịch chiếu và sức chứa phòng.** Hai suất chiếu không được chồng lấn thời gian trong cùng phòng; số ghế không được vượt sức chứa và vị trí ghế không được trùng.
 2. **Nhiều khách chọn cùng một ghế.** Ví dụ, hai khách cùng thấy ghế A1 còn trống và cùng gửi yêu cầu đặt vé. Kết quả tra cứu trước đó không đủ để bảo đảm ghế vẫn còn tại thời điểm mua. Luồng đặt vé cần kiểm tra và ghi nhận trong giao dịch database, kết hợp ràng buộc chống trùng theo cặp suất chiếu–ghế. Một ghế có thể được bán ở các suất khác nhau, nhưng không được bán hai lần trong cùng suất.
-3. **Giữ ghế nhưng không hoàn tất giao dịch.** Khách có thể chọn ghế rồi thoát ứng dụng hoặc thanh toán quá lâu. Nếu bổ sung giữ ghế, hệ thống cần thời hạn giữ và cơ chế giải phóng ghế khi hết hạn, đồng thời xử lý trường hợp thanh toán đến sau khi ghế đã được giải phóng.
-4. **Đơn hàng và thanh toán không đồng bộ.** Mất kết nối có thể khiến khách đã thanh toán nhưng chưa nhận vé; yêu cầu gửi lại hoặc thông báo thanh toán lặp có thể dẫn đến tạo nhiều vé. Phần thanh toán cần quản lý trạng thái đơn hàng, xử lý lặp an toàn và có cách đối chiếu kết quả trước khi xác nhận vé.
-5. **Thay đổi dữ liệu đang được sử dụng.** Việc xóa phim, phòng, ghế hoặc suất chiếu có dữ liệu liên quan có thể gây lỗi hoặc làm mất thông tin cần đối chiếu. Hệ thống cần quy định khi nào được sửa/xóa, khi nào phải ngừng bán hoặc hủy suất; khi đã có đơn hàng, cần bảo toàn giá và thông tin giao dịch tại thời điểm mua.
-6. **Phân quyền và kiểm tra dữ liệu đầu vào.** Hệ thống cần bảo vệ mật khẩu, xác thực người gọi API và kiểm tra quyền trên từng thao tác. Khách hàng chỉ được xóa đánh giá của mình, còn thao tác quản lý rạp thuộc về admin. Dữ liệu như ngày giờ, loại ghế, giá tiền và điểm đánh giá cần được kiểm tra thống nhất.
-7. **Tải truy cập và thông tin ghế thay đổi nhanh.** Khi nhiều khách tra cứu cùng lúc, API cần phản hồi ổn định mà vẫn giữ dữ liệu chính xác. Khi mở rộng, cần xem xét phân trang, tối ưu truy vấn và cập nhật tình trạng ghế; kiểm tra khả năng đáp ứng bằng đo đạc thực tế.
+3. **Phân quyền và kiểm tra dữ liệu đầu vào.** Hệ thống cần bảo vệ mật khẩu, xác thực người gọi API và kiểm tra quyền trên từng thao tác. Khách hàng chỉ được xóa đánh giá của mình, còn thao tác quản lý rạp thuộc về admin. Dữ liệu như ngày giờ, loại ghế, giá tiền và điểm đánh giá cần được kiểm tra thống nhất.
+4. **Tải truy cập và thông tin ghế thay đổi nhanh.** Khi nhiều khách tra cứu cùng lúc, API cần phản hồi ổn định mà vẫn giữ dữ liệu chính xác. Khi mở rộng, cần xem xét phân trang, tối ưu truy vấn và cập nhật tình trạng ghế; kiểm tra khả năng đáp ứng bằng đo đạc thực tế.
 
 ### Phạm vi của phiên bản hiện tại
 
 Repo hiện tập trung vào backend, cung cấp API cho tài khoản và phân quyền, phim, đánh giá, phòng chiếu, ghế, suất chiếu và đồ ăn. Code đã có các kiểm tra như trùng vị trí ghế, giới hạn sức chứa, lịch chiếu chồng lấn và quyền xóa đánh giá. API chi tiết suất chiếu đọc tình trạng ghế từ các bản ghi vé hiện có.
 
-Các API đặt vé, giữ ghế, tạo đơn hàng, thanh toán và hủy vé **chưa được triển khai**. Những vấn đề về đặt đồng thời, hết hạn giữ ghế và đồng bộ thanh toán ở trên là yêu cầu cho giai đoạn hoàn thiện, chưa phải khả năng đã có của hệ thống. Các phép kiểm tra hiện tại cũng chưa đủ để khẳng định hệ thống đã xử lý an toàn mọi yêu cầu ghi đồng thời.
+Các API đặt vé, tạo đơn hàng **chưa được triển khai**. Những vấn đề về đặt đồng thời ở trên là yêu cầu cho giai đoạn hoàn thiện, chưa phải khả năng đã có của hệ thống. Các phép kiểm tra hiện tại cũng chưa đủ để khẳng định hệ thống đã xử lý an toàn mọi yêu cầu ghi đồng thời.
 
 Trang chủ hiện chỉ là giao diện mẫu; các chức năng được sử dụng và kiểm tra qua Swagger UI hoặc công cụ gọi HTTP API. Phiên bản này cung cấp dữ liệu nền và các nghiệp vụ quản lý cơ bản để tiếp tục xây dựng luồng bán vé hoàn chỉnh.
 
