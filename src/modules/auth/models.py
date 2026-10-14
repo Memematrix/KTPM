@@ -63,6 +63,11 @@ class User(Base):
         "Review",
         back_populates="user"
     )
+    
+     reviews: Mapped[list[Order]] = relationship(
+        "Order",
+        back_populates="user"
+    )
 
 
 class Review(Base):
