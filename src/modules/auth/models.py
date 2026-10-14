@@ -5,6 +5,7 @@ SQLAlchemy ORM model cho bảng `users` — khớp với schema đã cập nhậ
 Đây là NƠI DUY NHẤT trong module auth được phép import SQLAlchemy Column
 types — Service và Router không đụng tới file này trực tiếp.
 """
+from __future__ import annotations
 
 import uuid
 from datetime import datetime
@@ -60,10 +61,12 @@ class User(Base):
     )
 
     reviews: Mapped[list[Review]] = relationship(
-        "Review",
         back_populates="user"
     )
 
+    orders: Mapped["Orders"] = relationship(
+        back_populates="user"
+    )
 
 class Review(Base):
     __tablename__ = "reviews"
@@ -99,7 +102,6 @@ class Review(Base):
     )
 
     user: Mapped[User] = relationship(
-        "User",
         back_populates="reviews",
     )
 
