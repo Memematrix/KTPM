@@ -5,7 +5,7 @@ SQLAlchemy ORM model cho bảng `users` — khớp với schema đã cập nhậ
 Đây là NƠI DUY NHẤT trong module auth được phép import SQLAlchemy Column
 types — Service và Router không đụng tới file này trực tiếp.
 """
-
+from __future__ import annotations
 import uuid
 from datetime import datetime
 
