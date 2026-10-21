@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # from src.modules.scheduling.models import Movie
 from src.common.database import Base
-from src.modules.ordering.models import Orders
+# from src.modules.ordering.models import Orders
 
 
 class User(Base):
@@ -65,7 +65,7 @@ class User(Base):
         back_populates="user"
     )
     
-    orders: Mapped[list[Orders]] = relationship(
+    orders = relationship(
         "Order",
         back_populates="user"
     )
