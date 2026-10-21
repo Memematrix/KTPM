@@ -65,8 +65,7 @@ class User(Base):
         back_populates="user"
     )
     
-    orders = relationship(
-        "Order",
+    orders: Mapped["Orders"] = relationship(
         back_populates="user"
     )
 
