@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
 from src.modules.scheduling.models import Ticket
+from src.modules.auth.models import User
 
 
 class Food(Base):
