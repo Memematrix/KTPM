@@ -56,6 +56,7 @@ async def create_order(payload: OrderCreate, db: Annotated[AsyncSession, Depends
     if booked_seat:
         raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail="One or more seats are booked")
     
+    foods_dict = {}
     
     if payload.items:
         list_food_id = [item.food_id for item in payload.items]

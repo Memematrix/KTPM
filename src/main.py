@@ -1,3 +1,4 @@
+from src.common.auth.role_guard import require_role
 from fastapi.staticfiles import StaticFiles
 from fastapi import status
 from fastapi import HTTPException
@@ -12,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 from fastapi.templating import Jinja2Templates
 from fastapi import FastAPI, Request
-from src.modules.ordering.routers import food, orders
+from src.modules.ordering.routers import food, orders, checkout
 from src.modules.scheduling import models
 from contextlib import asynccontextmanager
 from src.modules.auth.routers import register_and_login, movies, reviews
@@ -43,6 +44,7 @@ app.include_router(reviews.router, prefix="/api", tags=["reviews"])
 app.include_router(screens.router, prefix="/api/screens", tags=["screens"])
 app.include_router(seats.router, prefix="/api/seats", tags=["seats"])
 app.include_router(showtimes.router, prefix="/api/showtimes", tags=["showtimes"])
+app.include_router(checkout.router, prefix="/api/checkout", tags=["checkout"])
 
 @app.get("/")
 async def home(request: Request):
@@ -95,7 +97,7 @@ async def get_all_showtimes(request: Request, db: Annotated[AsyncSession, Depend
     )
 
 @app.get("/showtimes/{showtime_id}", name="get_showtime_detail_html")
-async def get_showtime_detail(request: Request, showtime_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)]):
+async def get_showtime_detail(request: Request, showtime_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)], current_user = Depends(require_role("admin"))):
     result = await db.execute(select(models.Showtime).where(models.Showtime.id == showtime_id).options(selectinload(models.Showtime.screen).selectinload(models.Screen.seats), selectinload(models.Showtime.tickets)))
     showtime = result.scalars().first()
     if not showtime:

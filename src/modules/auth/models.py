@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, Uuid, ForeignKey
+from sqlalchemy import DateTime, String, Uuid, ForeignKey, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # from src.modules.scheduling.models import Movie
@@ -47,6 +47,12 @@ class User(Base):
     phone: Mapped[str | None] = mapped_column(
         String(20),
         nullable=True,
+    )
+
+    balance: Mapped[float] = mapped_column(
+        Float,
+        nullable=True,
+        default=0
     )
 
     role: Mapped[str] = mapped_column(
