@@ -1,0 +1,2339 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "API Hệ thống bán vé xem phim",
+    "version": "0.1.0",
+    "description": "Backend quản lý rạp và đặt vé xem phim.\n\n**Luồng nghiệp vụ:** đăng nhập → tra cứu phim và suất chiếu → chọn ghế, đồ ăn → tạo đơn → xem đơn.\n\n**Xác thực:** đăng nhập tại `POST /api/auth/login`, sau đó dùng access token trong `Authorization: Bearer <access_token>`. Các thao tác quản trị yêu cầu vai trò `admin`.\n\n**Phạm vi:** đã có API tạo đơn và bản ghi vé; chưa tích hợp thanh toán hoặc giữ ghế có thời hạn. Đơn mới có trạng thái `pending`.\n\n**Ví dụ:** dữ liệu minh họa; thay UUID bằng ID thực tế trước khi gửi yêu cầu. Đây là bản đặc tả lưu trong repo, được biên tập từ OpenAPI do FastAPI sinh ra."
+  },
+  "paths": {
+    "/food": {
+      "get": {
+        "tags": [
+          "food"
+        ],
+        "summary": "Danh sách đồ ăn",
+        "operationId": "get_food_food_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FoodResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Food Food Get"
+                }
+              }
+            }
+          }
+        },
+        "description": "Công khai. Sắp xếp theo tên tăng dần."
+      },
+      "post": {
+        "tags": [
+          "food"
+        ],
+        "summary": "Thêm món ăn",
+        "operationId": "create_food_food_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FoodCreate"
+              },
+              "example": {
+                "name": "Bắp rang bơ",
+                "description": "Phần vừa",
+                "price": "45000.00",
+                "image_url": "https://example.com/popcorn.jpg"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "description": "Yêu cầu admin. Giá không âm."
+      }
+    },
+    "/food/{food_id}": {
+      "delete": {
+        "tags": [
+          "food"
+        ],
+        "summary": "Xóa món ăn",
+        "operationId": "delete_food_food__food_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "food_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Food Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Yêu cầu admin. Dữ liệu còn liên kết có thể khiến thao tác xóa thất bại."
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Danh sách đơn hàng",
+        "operationId": "get_orders_orders_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OrderResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Orders Orders Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "description": "Yêu cầu đăng nhập. Khách chỉ xem đơn của mình; admin xem mọi đơn. Sắp xếp từ mới đến cũ."
+      },
+      "post": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Tạo đơn đặt vé kèm đồ ăn",
+        "operationId": "create_order_orders_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderCreate"
+              },
+              "example": {
+                "showtime_id": "33333333-3333-4333-8333-333333333333",
+                "seat_ids": [
+                  "44444444-4444-4444-8444-444444444444"
+                ],
+                "items": [
+                  {
+                    "food_id": "55555555-5555-4555-8555-555555555555",
+                    "quantity": 1
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "description": "Yêu cầu đăng nhập. Kiểm tra ghế thuộc phòng của suất, ID không lặp và ghế chưa có vé pending/confirmed.\n\nTổng tiền = giá cơ bản × số ghế + tổng giá món × số lượng. Đơn, vé và đồ ăn được commit cùng giao dịch; lỗi ràng buộc khi commit được rollback và trả 409. Đơn mới pending, chưa đồng nghĩa đã thanh toán."
+      }
+    },
+    "/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Chi tiết đơn hàng",
+        "operationId": "get_order_orders__order_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Chỉ chủ đơn hoặc admin được xem. Trả 404 nếu đơn không tồn tại hoặc không thuộc quyền xem."
+      },
+      "delete": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Xóa đơn hàng",
+        "operationId": "delete_order_orders__order_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Chỉ chủ đơn hoặc admin được xóa. Chưa phải quy trình hủy/hoàn tiền. Việc xóa vé liên quan phụ thuộc cấu hình khóa ngoại thực tế; chưa khẳng định đã nhả ghế thành công."
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Đăng ký tài khoản",
+        "operationId": "register_api_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              },
+              "example": {
+                "username": "khach_demo",
+                "password": "DemoCinema2026!",
+                "name": "Nguyễn Minh Anh",
+                "phone": "0900000000"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Tạo tài khoản với vai trò mặc định customer. Không yêu cầu đăng nhập."
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Đăng nhập",
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "username": "khach_demo",
+                "password": "DemoCinema2026!"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Trả về access token JWT và thông tin tài khoản."
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Xem tài khoản hiện tại",
+        "operationId": "get_me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "description": "Yêu cầu Bearer JWT hợp lệ."
+      }
+    },
+    "/api/movies": {
+      "get": {
+        "tags": [
+          "movies"
+        ],
+        "summary": "Danh sách phim",
+        "operationId": "get_movies_api_movies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MovieResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Movies Api Movies Get"
+                }
+              }
+            }
+          }
+        },
+        "description": "Công khai. Danh sách hiện chưa phân trang."
+      }
+    },
+    "/api/movies/{movie_id}": {
+      "get": {
+        "tags": [
+          "movies"
+        ],
+        "summary": "Chi tiết phim",
+        "operationId": "get_movie_id_api_movies__movie_id__get",
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Movie Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovieResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Tra cứu thông tin phim theo UUID."
+      }
+    },
+    "/api/movies/create": {
+      "post": {
+        "tags": [
+          "movies"
+        ],
+        "summary": "Tạo phim",
+        "operationId": "create_movie_api_movies_create_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MovieCreate"
+              },
+              "example": {
+                "title": "Hành trình mùa thu",
+                "description": "Bộ phim minh họa cho bài tập quản lý rạp.",
+                "duration": 120,
+                "release_date": "2026-11-01",
+                "poster_url": "https://example.com/poster.jpg"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovieResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "description": "Yêu cầu admin. Kiểm tra trùng tên và ngày phát hành. Nên gửi description và poster_url vì model database hiện không cho phép null."
+      }
+    },
+    "/api/movies/update/{movie_id}": {
+      "patch": {
+        "tags": [
+          "movies"
+        ],
+        "summary": "Cập nhật phim",
+        "operationId": "update_movie_id_api_movies_update__movie_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Movie Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MovieUpdate"
+              },
+              "example": {
+                "title": "Hành trình mùa thu — bản cập nhật",
+                "duration": 125
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovieResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Yêu cầu admin. Chỉ gửi các trường cần thay đổi."
+      }
+    },
+    "/api/movies/delete/{movie_id}": {
+      "delete": {
+        "tags": [
+          "movies"
+        ],
+        "summary": "Xóa phim",
+        "operationId": "delete_movie_id_api_movies_delete__movie_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Movie Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Yêu cầu admin. Dữ liệu còn liên kết có thể khiến thao tác xóa thất bại."
+      }
+    },
+    "/api/movies/{movie_id}/reviews": {
+      "get": {
+        "tags": [
+          "reviews"
+        ],
+        "summary": "Danh sách đánh giá phim",
+        "operationId": "get_movie_reviews_api_movies__movie_id__reviews_get",
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Movie Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReviewResponse"
+                  },
+                  "title": "Response Get Movie Reviews Api Movies  Movie Id  Reviews Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Công khai. Sắp xếp đánh giá từ mới đến cũ."
+      },
+      "post": {
+        "tags": [
+          "reviews"
+        ],
+        "summary": "Viết đánh giá phim",
+        "operationId": "create_review_api_movies__movie_id__reviews_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Movie Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewCreate"
+              },
+              "example": {
+                "rating": 5,
+                "comment": "Nội dung hấp dẫn, âm thanh tốt."
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Yêu cầu đăng nhập. Điểm từ 1 đến 5; chưa yêu cầu đã mua vé và chưa giới hạn một đánh giá/người/phim."
+      }
+    },
+    "/api/reviews/{review_id}": {
+      "delete": {
+        "tags": [
+          "reviews"
+        ],
+        "summary": "Xóa đánh giá",
+        "operationId": "delete_review_api_reviews__review_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "review_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Review Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Chỉ tác giả đánh giá hoặc admin được thực hiện."
+      }
+    },
+    "/api/screens": {
+      "get": {
+        "tags": [
+          "screens"
+        ],
+        "summary": "Danh sách phòng chiếu",
+        "operationId": "get_screens_api_screens_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "description": "Công khai. Trả về danh sách phòng chiếu."
+      },
+      "post": {
+        "tags": [
+          "screens"
+        ],
+        "summary": "Tạo phòng chiếu",
+        "operationId": "create_screen_api_screens_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScreenCreate"
+              },
+              "example": {
+                "name": "Phòng 01",
+                "total_seats": 80
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "description": "Yêu cầu admin. Sức chứa phải ít nhất 1 ghế."
+      }
+    },
+    "/api/screens/{screen_id}": {
+      "delete": {
+        "tags": [
+          "screens"
+        ],
+        "summary": "Xóa phòng chiếu",
+        "operationId": "delete_screen_api_screens__screen_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "screen_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Screen Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Yêu cầu admin. Dữ liệu còn liên kết có thể khiến thao tác xóa thất bại."
+      }
+    },
+    "/api/screens/{screen_id}/seats": {
+      "get": {
+        "tags": [
+          "screens"
+        ],
+        "summary": "Danh sách ghế trong phòng",
+        "operationId": "get_seats_of_screen_api_screens__screen_id__seats_get",
+        "parameters": [
+          {
+            "name": "screen_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Screen Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SeatResponse"
+                  },
+                  "title": "Response Get Seats Of Screen Api Screens  Screen Id  Seats Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Công khai. Chưa kèm tình trạng đặt ghế theo suất chiếu."
+      },
+      "post": {
+        "tags": [
+          "screens"
+        ],
+        "summary": "Thêm ghế vào phòng",
+        "operationId": "create_seat_of_screen_api_screens__screen_id__seats_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "screen_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Screen Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeatCreate"
+              },
+              "example": {
+                "row_letter": "A",
+                "seat_number": 1,
+                "type": "standard"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Yêu cầu admin. Kiểm tra sức chứa và vị trí ghế trùng. Hàng ghế được chuyển thành chữ hoa."
+      }
+    },
+    "/api/seats/{seat_id}": {
+      "delete": {
+        "tags": [
+          "seats"
+        ],
+        "summary": "Xóa ghế",
+        "operationId": "delete_seat_api_seats__seat_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "seat_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Seat Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Yêu cầu admin. Dữ liệu còn liên kết có thể khiến thao tác xóa thất bại."
+      }
+    },
+    "/api/showtimes": {
+      "get": {
+        "tags": [
+          "showtimes"
+        ],
+        "summary": "Tra cứu suất chiếu theo phim và ngày",
+        "operationId": "get_showtimes_api_showtimes_get",
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Movie Id"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ShowtimeResponse"
+                  },
+                  "title": "Response Get Showtimes Api Showtimes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Công khai. Cần movie_id và date. Trả 404 nếu không có suất phù hợp."
+      },
+      "post": {
+        "tags": [
+          "showtimes"
+        ],
+        "summary": "Tạo suất chiếu",
+        "operationId": "create_showtime_api_showtimes_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShowtimeCreate"
+              },
+              "example": {
+                "movie_id": "11111111-1111-4111-8111-111111111111",
+                "screen_id": "22222222-2222-4222-8222-222222222222",
+                "start_time": "2026-11-01T19:00:00+07:00",
+                "end_time": "2026-11-01T21:00:00+07:00",
+                "base_price": 90000
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShowtimeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Yêu cầu admin. Kiểm tra phim/phòng tồn tại, thời gian hợp lệ và không chồng lịch trong cùng phòng."
+      }
+    },
+    "/api/showtimes/{showtime_id}": {
+      "get": {
+        "tags": [
+          "showtimes"
+        ],
+        "summary": "Chi tiết suất chiếu và tình trạng ghế",
+        "operationId": "get_showtime_detail_api_showtimes__showtime_id__get",
+        "parameters": [
+          {
+            "name": "showtime_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Showtime Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailableSeatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Công khai. Mỗi ghế có is_available; ghế có bản ghi vé trong suất được coi là đã đặt."
+      },
+      "delete": {
+        "tags": [
+          "showtimes"
+        ],
+        "summary": "Xóa suất chiếu",
+        "operationId": "delete_showtime_api_showtimes__showtime_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "showtime_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Showtime Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Yêu cầu admin. Dữ liệu còn liên kết có thể khiến thao tác xóa thất bại."
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Home",
+        "operationId": "home__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Kiểm tra API hoạt động",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "description": "Trả về status: ok. Không kiểm tra kết nối database."
+      }
+    },
+    "/movies": {
+      "get": {
+        "summary": "Get All Movies",
+        "operationId": "get_all_movies_movies_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movies/{movie_id}": {
+      "get": {
+        "summary": "Get Movie Detail",
+        "operationId": "get_movie_detail_movies__movie_id__get",
+        "parameters": [
+          {
+            "name": "movie_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Movie Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/showtimes": {
+      "get": {
+        "summary": "Get All Showtimes",
+        "operationId": "get_all_showtimes_showtimes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/showtimes/{showtime_id}": {
+      "get": {
+        "summary": "Get Showtime Detail Html",
+        "operationId": "get_showtime_detail_html_showtimes__showtime_id__get",
+        "parameters": [
+          {
+            "name": "showtime_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Showtime Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AvailableSeatResponse": {
+        "properties": {
+          "showtime": {
+            "$ref": "#/components/schemas/ShowtimeResponse"
+          },
+          "available_seats": {
+            "items": {
+              "$ref": "#/components/schemas/SeatWithStatus"
+            },
+            "type": "array",
+            "title": "Available Seats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "showtime",
+          "available_seats"
+        ],
+        "title": "AvailableSeatResponse"
+      },
+      "FoodCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Price"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "price"
+        ],
+        "title": "FoodCreate"
+      },
+      "FoodResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "price",
+          "id"
+        ],
+        "title": "FoodResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "MovieCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration": {
+            "type": "integer",
+            "title": "Duration"
+          },
+          "release_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Release Date"
+          },
+          "poster_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poster Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "duration",
+          "release_date"
+        ],
+        "title": "MovieCreate"
+      },
+      "MovieResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration": {
+            "type": "integer",
+            "title": "Duration"
+          },
+          "release_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Date"
+          },
+          "poster_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poster Url"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "duration",
+          "release_date",
+          "poster_url",
+          "created_at"
+        ],
+        "title": "MovieResponse"
+      },
+      "MovieUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "duration": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration"
+          },
+          "release_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Date"
+          },
+          "poster_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poster Url"
+          }
+        },
+        "type": "object",
+        "title": "MovieUpdate"
+      },
+      "OrderCreate": {
+        "properties": {
+          "showtime_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Showtime Id"
+          },
+          "seat_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Seat Ids"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderFoodCreate"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "showtime_id",
+          "seat_ids"
+        ],
+        "title": "OrderCreate"
+      },
+      "OrderFoodCreate": {
+        "properties": {
+          "food_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Food Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Quantity",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "food_id"
+        ],
+        "title": "OrderFoodCreate"
+      },
+      "OrderFoodResponse": {
+        "properties": {
+          "food_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Food Id"
+          },
+          "quantity": {
+            "type": "integer",
+            "title": "Quantity"
+          },
+          "price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price"
+          },
+          "food": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FoodResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "food_id",
+          "quantity",
+          "price"
+        ],
+        "title": "OrderFoodResponse"
+      },
+      "OrderResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "pending"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "total_amount": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Total Amount"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "order_foods": {
+            "items": {
+              "$ref": "#/components/schemas/OrderFoodResponse"
+            },
+            "type": "array",
+            "title": "Order Foods",
+            "default": []
+          },
+          "tickets": {
+            "items": {
+              "$ref": "#/components/schemas/TicketResponse"
+            },
+            "type": "array",
+            "title": "Tickets",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "total_amount",
+          "created_at"
+        ],
+        "title": "OrderResponse"
+      },
+      "RegisterRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 6,
+            "title": "Password"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password",
+          "name"
+        ],
+        "title": "RegisterRequest"
+      },
+      "ReviewCreate": {
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rating"
+        ],
+        "title": "ReviewCreate"
+      },
+      "ReviewResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "movie_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Movie Id"
+          },
+          "rating": {
+            "type": "integer",
+            "title": "Rating"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "movie_id",
+          "rating",
+          "comment",
+          "created_at"
+        ],
+        "title": "ReviewResponse"
+      },
+      "ScreenCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name"
+          },
+          "total_seats": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Total Seats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "total_seats"
+        ],
+        "title": "ScreenCreate"
+      },
+      "SeatCreate": {
+        "properties": {
+          "row_letter": {
+            "type": "string",
+            "maxLength": 1,
+            "title": "Row Letter"
+          },
+          "seat_number": {
+            "type": "integer",
+            "title": "Seat Number"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row_letter",
+          "seat_number",
+          "type"
+        ],
+        "title": "SeatCreate"
+      },
+      "SeatResponse": {
+        "properties": {
+          "row_letter": {
+            "type": "string",
+            "maxLength": 1,
+            "title": "Row Letter"
+          },
+          "seat_number": {
+            "type": "integer",
+            "title": "Seat Number"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "screen_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Screen Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row_letter",
+          "seat_number",
+          "type",
+          "id",
+          "screen_id"
+        ],
+        "title": "SeatResponse"
+      },
+      "SeatWithStatus": {
+        "properties": {
+          "seat": {
+            "$ref": "#/components/schemas/SeatResponse"
+          },
+          "is_available": {
+            "type": "boolean",
+            "title": "Is Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "seat",
+          "is_available"
+        ],
+        "title": "SeatWithStatus"
+      },
+      "ShowtimeCreate": {
+        "properties": {
+          "base_price": {
+            "type": "integer",
+            "title": "Base Price"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "movie_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Movie Id"
+          },
+          "screen_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Screen Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "base_price",
+          "start_time",
+          "end_time",
+          "movie_id",
+          "screen_id"
+        ],
+        "title": "ShowtimeCreate"
+      },
+      "ShowtimeResponse": {
+        "properties": {
+          "base_price": {
+            "type": "integer",
+            "title": "Base Price"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "base_price",
+          "start_time",
+          "end_time",
+          "id"
+        ],
+        "title": "ShowtimeResponse"
+      },
+      "TicketResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "order_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Id"
+          },
+          "showtime_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Showtime Id"
+          },
+          "seat_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Seat Id"
+          },
+          "price": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Price"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_id",
+          "showtime_id",
+          "seat_id",
+          "price"
+        ],
+        "title": "TicketResponse"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "user"
+        ],
+        "title": "TokenResponse"
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "name",
+          "role",
+          "created_at"
+        ],
+        "title": "UserResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Tài khoản — đăng ký, đăng nhập và thông tin người dùng."
+    },
+    {
+      "name": "movies",
+      "description": "Phim — tra cứu và quản lý danh mục phim."
+    },
+    {
+      "name": "reviews",
+      "description": "Đánh giá — xem, viết và xóa đánh giá phim theo quyền."
+    },
+    {
+      "name": "screens",
+      "description": "Phòng chiếu và ghế — quản lý sức chứa, vị trí và loại ghế."
+    },
+    {
+      "name": "seats",
+      "description": "Ghế — xóa ghế theo quyền quản trị."
+    },
+    {
+      "name": "showtimes",
+      "description": "Suất chiếu — tra cứu lịch, tình trạng ghế và quản lý suất chiếu."
+    },
+    {
+      "name": "food",
+      "description": "Đồ ăn — tra cứu và quản lý danh mục đồ ăn, nước uống."
+    },
+    {
+      "name": "orders",
+      "description": "Đơn hàng — đặt vé kèm đồ ăn, xem và xóa đơn theo quyền."
+    }
+  ]
+}
