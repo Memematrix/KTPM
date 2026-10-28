@@ -23,7 +23,7 @@ dependencies = [
     "pyjwt>=2.14.0",
     "python-dotenv>=1.2.3",
     "python-jose[cryptography]>=3.5.0",
-    "sqlalchemy>=2.0.52",
+    "sqlalchemy[asyncio]>=2.0.52",
     "supabase>=2.31.0",
     "uvicorn[standard]>=0.53.0",
 ]

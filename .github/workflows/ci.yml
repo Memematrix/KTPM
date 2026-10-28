@@ -1,0 +1,22 @@
+name: FastAPI CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+
+      - name: Build Docker image
+        run: docker build -t cinema-api:ci .
