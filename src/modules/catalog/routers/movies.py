@@ -10,8 +10,8 @@ from sqlalchemy import select
 from src.common.database import get_db
 from src.common.auth.role_guard import require_role, CurrentUser
 
-from src.modules.auth.schemas import MovieCreate, MovieUpdate, MovieResponse
-from src.modules.scheduling.models import Movie
+from src.modules.catalog.schemas import MovieCreate, MovieUpdate, MovieResponse
+from src.modules.catalog.models import Movie
 
 
 router = APIRouter()

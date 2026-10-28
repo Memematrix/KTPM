@@ -1,5 +1,6 @@
 from __future__ import annotations
 from enum import StrEnum
+from typing import TYPE_CHECKING
 from sqlalchemy import Uuid, Float
 import decimal
 import uuid
@@ -10,30 +11,13 @@ from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, Enu
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.common.database import Base
-# from src.modules.auth.models import Review
+if TYPE_CHECKING:
+    from src.modules.catalog.models import Movie
 
 class SeatType(StrEnum):
     standard = "standard"
     vip = "vip"
     sweetbox = "sweetbox"
-
-class Movie(Base):
-    __tablename__ = "movies"
-    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
-    title: Mapped[str] = mapped_column(Text, nullable=False)
-    description: Mapped[str] = mapped_column(Text)
-    duration: Mapped[int] = mapped_column(Integer)
-    release_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    poster_url: Mapped[str] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-
-    # reviews: Mapped[list[Review]] = relationship(
-    #     "Review",
-    #     back_populates="movie",
-    # )
-    showtimes: Mapped[list[Showtime]] = relationship(
-        back_populates="movie"
-    )
 
 class Screen(Base):
     __tablename__ = "screens"

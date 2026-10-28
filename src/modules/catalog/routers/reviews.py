@@ -5,10 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.common.database import get_db
-from src.modules.auth.models import User, Review
+from src.modules.auth.models import User
+from src.modules.catalog.models import Review
 from src.common.auth.middleware import get_current_user
-from src.modules.scheduling.models import Movie
-from src.modules.auth.schemas import ReviewCreate, ReviewResponse
+from src.modules.catalog.models import Movie
+from src.modules.catalog.schemas import ReviewCreate, ReviewResponse
 
 
 router = APIRouter()

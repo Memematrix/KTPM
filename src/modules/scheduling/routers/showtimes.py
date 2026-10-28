@@ -1,4 +1,5 @@
 from src.modules.scheduling.models import Seat
+from src.modules.catalog.models import Movie
 from src.common.auth.role_guard import require_role
 import uuid
 from datetime import date
@@ -62,7 +63,7 @@ async def create_showtime(showtime: ShowtimeCreate, db: Annotated[AsyncSession, 
             detail="End time must be after start time"
         )
 
-    result = await db.execute(select(models.Movie).where(models.Movie.id == showtime.movie_id))
+    result = await db.execute(select(Movie).where(Movie.id == showtime.movie_id))
     movie = result.scalars().first()
     if not movie:
         raise HTTPException(

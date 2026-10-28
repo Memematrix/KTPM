@@ -16,7 +16,9 @@ from fastapi import FastAPI, Request
 from src.modules.ordering.routers import food, orders, checkout
 from src.modules.scheduling import models
 from contextlib import asynccontextmanager
-from src.modules.auth.routers import register_and_login, movies, reviews
+from src.modules.auth.routers import register_and_login
+from src.modules.catalog.routers import movies, reviews
+from src.modules.catalog.models import Movie
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -60,7 +62,7 @@ async def health_check():
 
 @app.get("/movies")
 async def get_all_movies(request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(select(models.Movie))
+    result = await db.execute(select(Movie))
     movies = result.scalars().all()
 
     return templates.TemplateResponse(
@@ -73,7 +75,7 @@ async def get_all_movies(request: Request, db: Annotated[AsyncSession, Depends(g
 
 @app.get("/movies/{movie_id}")
 async def get_movie_detail(movie_id: uuid.UUID, request: Request, db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(select(models.Movie).options(selectinload(models.Movie.showtimes)).where(models.Movie.id == movie_id))
+    result = await db.execute(select(Movie).options(selectinload(Movie.showtimes)).where(Movie.id == movie_id))
     movie = result.scalars().first()
 
     return templates.TemplateResponse(

@@ -57,8 +57,9 @@ src/
     database.py           # Engine, session bất đồng bộ và Base của ORM
     auth/                 # JWT, băm mật khẩu, xác thực và kiểm tra vai trò
   modules/
-    auth/                 # Tài khoản; router/schema phim và đánh giá
-    scheduling/           # Phòng, ghế, suất chiếu; chứa cả model Movie và Ticket
+    auth/                 # Tài khoản, đăng ký và đăng nhập
+    catalog/              # Phim và đánh giá: router, model và schema
+    scheduling/           # Phòng, ghế, suất chiếu và vé (Ticket)
     ordering/             # Đồ ăn, đơn hàng, chi tiết đồ ăn và nghiệp vụ đặt vé
 ```
 
