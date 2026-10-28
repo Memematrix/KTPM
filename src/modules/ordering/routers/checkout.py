@@ -48,9 +48,9 @@ async def checkout(order_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_
             detail="You cannot checkout an order that does not belong to you",
         )
 
-    if user.balance < order.total_amount:
-        raise HTTPException(status_code=status.HTTP_402_PAYMENT_REQUIRED, detail="Insufficient balance")
-
+    if Decimal(str(user.balance)) < order.total_amount:
+        user.balance = float(Decimal(str(user.balance)) - order.total_amount)
+    
     user.balance = float(user.balance) - float(order.total_amount)
     order.status = "completed"
     for ticket in order.tickets:
