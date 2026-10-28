@@ -19,13 +19,13 @@ Cách dùng ở B / C:
         ...
 """
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import jwt as pyjwt
 
 from .jwt import verify_access_token, TokenPayload as CurrentUser  # re-export cho dễ đọc ở nơi dùng
 
-__all__ = ["get_current_user", "CurrentUser"]
+__all__ = ["get_current_user", "get_page_user", "CurrentUser"]
 
 # HTTPBearer tự động đọc header: Authorization: Bearer <token>
 # auto_error=False để tự kiểm soát response 401 thay vì để FastAPI trả lỗi mặc định.
@@ -69,3 +69,15 @@ def get_current_user(
         )
 
     return current_user
+
+
+def get_page_user(
+    credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme),
+    access_token: str | None = Cookie(default=None),
+) -> CurrentUser:
+    """Allow a login cookie on HTML pages, while APIs remain Bearer-only."""
+    if credentials is None and access_token:
+        credentials = HTTPAuthorizationCredentials(
+            scheme="Bearer", credentials=access_token
+        )
+    return get_current_user(credentials)

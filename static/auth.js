@@ -51,8 +51,19 @@ export async function getCurrentUser() {
   return fetchPromise; //should be null at this point
 }
 
-export function logout() {
+export async function logout() {
+  try {
+    const res = await fetch("/api/auth/logout", { method: "POST" });
+    if (!res.ok) {
+      throw new Error("Could not log out");
+    }
+  } catch (error) {
+    console.error("Error logging out:", error);
+    alert("Could not log out. Please try again.");
+    return;
+  }
   localStorage.removeItem("access_token");
+  localStorage.removeItem("user");
   currentUser = null;
   window.location.href = "/";
 }

@@ -6,10 +6,13 @@ Base URL: `http://localhost:8000`. Body dùng JSON; các ID là UUID, ngày dùn
 
 API yêu cầu đăng nhập sử dụng header `Authorization: Bearer <access_token>`; quyền **Admin** tương ứng vai trò `admin`. Xem schema và thử request tại [Swagger UI](http://localhost:8000/docs).
 
+Đăng nhập còn đặt cookie `access_token` có `HttpOnly`, `SameSite=Lax`, phạm vi `/showtimes` và `Secure` khi dùng HTTPS. Trang HTML `GET /showtimes/{showtime_id}` đọc cookie này và vẫn yêu cầu vai trò `admin`; API tiếp tục dùng Bearer token. Sau khi cập nhật từ phiên bản chỉ dùng localStorage, cần đăng xuất rồi đăng nhập lại để nhận cookie.
+
 | Chức năng | Method và endpoint | Quyền | Đầu vào | Thành công / Đầu ra | Lỗi nghiệp vụ |
 | --- | --- | --- | --- | --- | --- |
 | Đăng ký | `POST /api/auth/register` | Công khai | Body: `username` (3–50 ký tự), `password` (6–255 ký tự), `name` (1–100 ký tự), `phone?` (tối đa 20 ký tự) | `201`: thông tin tài khoản, vai trò mặc định `customer`; không trả mật khẩu | `400`: trùng tên đăng nhập |
 | Đăng nhập | `POST /api/auth/login` | Công khai | Body: `username`, `password` | `200`: `access_token`, `token_type`, `user` | `400`: sai tên đăng nhập hoặc mật khẩu |
+| Đăng xuất trình duyệt | `POST /api/auth/logout` | Công khai | Không | `204`: xóa cookie trang suất chiếu; phía trình duyệt xóa token và user trong localStorage; JWT đã cấp còn hợp lệ tới khi hết hạn | — |
 | Thông tin tài khoản | `GET /api/auth/me` | Đăng nhập | Không | `200`: `id`, `username`, `name`, `phone`, `role`, `created_at` | — |
 | Danh sách phim | `GET /api/movies` | Công khai | Không | `200`: danh sách phim | — |
 | Chi tiết phim | `GET /api/movies/{movie_id}` | Công khai | Path: `movie_id` | `200`: `id`, `title`, `description`, `duration`, `release_date`, `poster_url`, `created_at` | `404`: không có phim |

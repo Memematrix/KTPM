@@ -99,7 +99,7 @@ async def get_all_showtimes(request: Request, db: Annotated[AsyncSession, Depend
     )
 
 @app.get("/showtimes/{showtime_id}", name="get_showtime_detail_html")
-async def get_showtime_detail(request: Request, showtime_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)], current_user = Depends(require_role("admin"))):
+async def get_showtime_detail(request: Request, showtime_id: uuid.UUID, db: Annotated[AsyncSession, Depends(get_db)], current_user = Depends(require_role("admin", allow_cookie=True))):
     result = await db.execute(select(models.Showtime).where(models.Showtime.id == showtime_id).options(selectinload(models.Showtime.screen).selectinload(models.Screen.seats), selectinload(models.Showtime.tickets)))
     showtime = result.scalars().first()
     if not showtime:

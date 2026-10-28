@@ -23,22 +23,27 @@ Cách dùng ở B / C:
 
 from fastapi import Depends, HTTPException, status
 
-from .middleware import get_current_user, CurrentUser
+from .middleware import get_current_user, get_page_user, CurrentUser
 
 __all__ = ["require_role"]
 
 
-def require_role(*allowed_roles: str):
+def require_role(*allowed_roles: str, allow_cookie: bool = False):
     """
     Factory tạo dependency kiểm tra role — gọi require_role("admin") ngay
     trong khai báo route, không cần viết if/else lặp lại trong từng handler.
+
+    Set allow_cookie=True only for read-only HTML pages that need browser
+    navigation. API endpoints keep the default Bearer-only authentication.
 
     Quy tắc trả lỗi (đã thống nhất trong daily meeting):
         - Chưa đăng nhập / token không hợp lệ -> 401 (get_current_user raise trước)
         - Đăng nhập rồi nhưng role không nằm trong allowed_roles -> 403
     """
 
-    def role_checker(current_user: CurrentUser = Depends(get_current_user)) -> CurrentUser:
+    auth_dependency = get_page_user if allow_cookie else get_current_user
+
+    def role_checker(current_user: CurrentUser = Depends(auth_dependency)) -> CurrentUser:
         if current_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

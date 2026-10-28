@@ -4,12 +4,13 @@ Auth Router — tầng API.
 """
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 
 from src.common.database import get_db
+from src.common.config import settings
 from src.common.auth.jwt import create_access_token
 from src.common.auth.middleware import get_current_user, CurrentUser
 from src.common.auth.role_guard import require_role
@@ -61,6 +62,8 @@ async def register(
 )
 async def login(
     payload: LoginRequest,
+    request: Request,
+    response: Response,
     db: Annotated[AsyncSession, Depends(get_db)]
 ):
 
@@ -78,6 +81,16 @@ async def login(
             role=user.role
         )
 
+        response.set_cookie(
+            key="access_token",
+            value=token,
+            httponly=True,
+            secure=request.url.scheme == "https",
+            samesite="lax",
+            max_age=settings.jwt_expire_minutes * 60,
+            path="/showtimes",
+        )
+
         return {
             "access_token": token,
             "token_type": "bearer",
@@ -88,6 +101,11 @@ async def login(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Incorrect password"
     )
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(response: Response):
+    response.delete_cookie("access_token", path="/showtimes")
 
 
 
