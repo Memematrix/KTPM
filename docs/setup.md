@@ -137,6 +137,9 @@ docker run -d --name ktpm --env-file .env -p 8000:8000 ghcr.io/memematrix/ktpm:[
 ```bash
 VERSION_NUMBER là bản mới nhất trong release trên github
 ```
+```bash
+Hoặc: docker compose up --build
+```
 
 ## 5. Truy cập và thử API
 
