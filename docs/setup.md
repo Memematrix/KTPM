@@ -130,21 +130,13 @@ Dự án đã có sẵn `pyproject.toml` và `uv.lock`. Sử dụng `uv` giúp b
 Tạo và cấu hình `.env` như trên, sau đó chạy lệnh (áp dụng cho cả **Linux** và **Windows**):
 
 ```bash
-docker compose up --build
+docker pull ghcr.io/memematrix/ktpm:[VERSION_NUMBER]
+
+docker run -d --name ktpm --env-file .env -p 8000:8000 ghcr.io/memematrix/ktpm:[VERSION_NUMBER]
 ```
-
-Chạy nền, xem log hoặc dừng dịch vụ:
-
 ```bash
-docker compose up --build -d
-docker compose logs -f api
-docker compose down
+VERSION_NUMBER là bản mới nhất trong release trên github
 ```
-
-Compose hiện chỉ chạy dịch vụ API, ánh xạ cổng `8000` và mount mã nguồn để reload. PostgreSQL phải được cung cấp riêng. 
-- Nếu kết nối tới Supabase Cloud: giữ nguyên `DATABASE_URL` trong `.env`.
-- Nếu database chạy trên máy Windows host và API chạy bằng Docker Desktop: dùng `host.docker.internal` thay cho `localhost`.
-- Nếu database chạy trên máy Linux host (ngoài container): dùng `172.17.0.1` (IP gateway mặc định của Docker) thay cho `localhost`.
 
 ## 5. Truy cập và thử API
 
