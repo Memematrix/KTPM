@@ -77,8 +77,6 @@ docker compose down
 
 Compose hiện chỉ chạy dịch vụ API, ánh xạ cổng `8000` và mount mã nguồn để reload. PostgreSQL phải được cung cấp riêng. Nếu database chạy trên máy Windows host và API chạy bằng Docker Desktop, dùng `host.docker.internal` thay cho `localhost` trong `DATABASE_URL`.
 
-**Lưu ý phiên bản:** Dockerfile hiện dùng `python:3.11-slim`, trong khi dự án khai báo Python 3.12+. Để môi trường Docker thống nhất với dự án, đổi dòng `FROM` trong Dockerfile thành `FROM python:3.12-slim` trước khi build. Dockerfile trong repo hiện chưa được đồng bộ phiên bản.
-
 ## 5. Truy cập và thử API
 
 - [Swagger UI](http://localhost:8000/docs)
