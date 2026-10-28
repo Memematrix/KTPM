@@ -13,6 +13,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.common.database import Base
 if TYPE_CHECKING:
     from src.modules.catalog.models import Movie
+    from src.modules.ordering.models import Ticket
 
 class SeatType(StrEnum):
     standard = "standard"
@@ -90,40 +91,3 @@ class Showtime(Base):
         back_populates="showtime"
     )
 
-class Ticket(Base):
-    __tablename__ = "tickets"
-    __table_args__ = (
-        UniqueConstraint(
-            "showtime_id",
-            "seat_id",
-            name="tickets_showtime_seat_unique",
-        ),
-    )
-    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, index=True, default=uuid.uuid4)
-    order_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid,
-        ForeignKey("orders.id"),
-        index=True,
-        nullable=False,
-    )
-    showtime_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid,
-        ForeignKey("showtimes.id"),
-        index=True,
-        nullable=False
-    )
-    seat_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid,
-        ForeignKey("seats.id"),
-        index=True,
-        nullable=False
-    )
-    price: Mapped[decimal.Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-
-
-    status: Mapped[str] = mapped_column(Text, nullable = False, default = "pending", server_default = "pending")
-
-    
-    showtime: Mapped[Showtime] = relationship(
-        back_populates="tickets"
-    )

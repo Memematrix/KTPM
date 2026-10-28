@@ -17,11 +17,9 @@ from src.modules.ordering.schemas import OrderCreate, OrderResponse
 router = APIRouter()
 
 
-
 @router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 async def create_order(payload: OrderCreate, db: Annotated[AsyncSession, Depends(get_db)], current_user: CurrentUser = Depends(get_current_user),):
-    
-    # KIỂM TRA
+
     if len(set(payload.seat_ids)) != len(payload.seat_ids):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Duplicate seat_ids")
     if len({item.food_id for item in payload.items}) != len(payload.items):
@@ -34,95 +32,92 @@ async def create_order(payload: OrderCreate, db: Annotated[AsyncSession, Depends
             )
         ).scalars().first()
     if not showtime:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Showtime not found") 
-    
-       
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Showtime not found")
+
     seats = (
         await db.execute(
             select(scheduling_models.Seat)
-            .where(scheduling_models.Seat.id.in_(payload.seat_ids), scheduling_models.Seat.screen_id == showtime.screen_id, )
+            .where(scheduling_models.Seat.id.in_(payload.seat_ids), scheduling_models.Seat.screen_id == showtime.screen_id)
         )
     ).scalars().all()
     if len(seats) != len(payload.seat_ids):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="One or more seats do not belong to this showtime's screen")
-    
-    
+
     booked_seat = (
         await db.execute(
-            select(scheduling_models.Ticket)
-            .where(scheduling_models.Ticket.showtime_id == payload.showtime_id, scheduling_models.Ticket.seat_id.in_(payload.seat_ids), scheduling_models.Ticket.status.in_(["confirmed", "pending"]))
+            select(order_models.Ticket)
+            .where(
+                order_models.Ticket.showtime_id == payload.showtime_id,
+                order_models.Ticket.seat_id.in_(payload.seat_ids),
+                order_models.Ticket.status.in_(["confirmed", "pending"]),
+            )
         )
     ).scalars().first()
     if booked_seat:
-        raise HTTPException(status_code = status.HTTP_409_CONFLICT, detail="One or more seats are booked")
-    
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="One or more seats are booked")
+
     foods_dict = {}
-    
+
     if payload.items:
         list_food_id = [item.food_id for item in payload.items]
         foods = (
             await db.execute(
                 select(order_models.Food)
                 .where(order_models.Food.id.in_(list_food_id))
-            )  
+            )
         ).scalars().all()
         foods_dict = {food.id: food for food in foods}
-        
+
         if len(foods) != len(list_food_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="One or more food items not found")
 
-
-    # TÍNH TOÁN
     ticket_price = Decimal(str(showtime.base_price))
     total_tickets_amount = Decimal(str(showtime.base_price)) * len(seats)
 
     total_foods_amount = sum(
-        (foods_dict[item.food_id].price * item.quantity for item in payload.items), 
-        Decimal("0")
+        (foods_dict[item.food_id].price * item.quantity for item in payload.items),
+        Decimal("0"),
     )
-    
+
     final_total_amount = total_tickets_amount + total_foods_amount
 
     new_order = order_models.Orders(
-        user_id=current_user.id, 
-        total_amount=final_total_amount, 
+        user_id=current_user.id,
+        total_amount=final_total_amount,
     )
 
     new_order.tickets = [
-        scheduling_models.Ticket(
-            showtime_id=payload.showtime_id, 
-            seat_id=seat.id, 
-            price=ticket_price
+        order_models.Ticket(
+            showtime_id=payload.showtime_id,
+            seat_id=seat.id,
+            price=ticket_price,
         )
         for seat in seats
     ]
 
     new_order.order_foods = [
         order_models.OrderFood(
-            food_id=item.food_id, 
-            quantity=item.quantity, 
-            price=foods_dict[item.food_id].price
+            food_id=item.food_id,
+            quantity=item.quantity,
+            price=foods_dict[item.food_id].price,
         )
         for item in payload.items
     ]
-    
+
     db.add(new_order)
 
-
-    # TRẢ KẾT QUẢ
     try:
         await db.commit()
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="One or more seats were booked during processing")
-    
-    
+
     return (
         await db.execute(
             select(order_models.Orders)
             .options(
-                selectinload(order_models.Orders.order_foods).selectinload(order_models.OrderFood.food), 
-                selectinload(order_models.Orders.tickets)
+                selectinload(order_models.Orders.order_foods).selectinload(order_models.OrderFood.food),
+                selectinload(order_models.Orders.tickets),
             )
             .where(order_models.Orders.id == new_order.id)
         )
@@ -180,6 +175,13 @@ async def delete_order(order_id: uuid.UUID, db: Annotated[AsyncSession, Depends(
     order = result.scalar_one_or_none()
     if order is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+
+    if order.status != "pending" and current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Cannot delete an order that is already processed or paid"
+        )
+
 
     await db.delete(order)
     await db.commit()
