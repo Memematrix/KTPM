@@ -72,21 +72,7 @@ Mỗi module có `routers/` để nhận và xử lý yêu cầu, `schemas.py` k
 
 ## 5. Chạy nhanh và tài liệu API
 
-Cần Python 3.12 và PostgreSQL sẵn sàng. Tại thư mục gốc repo, dùng PowerShell:
-
-```powershell
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-```
-
-Điền `DATABASE_URL` (dạng `postgresql+asyncpg://...`), `SECRET_KEY` và `JWT_EXPIRE_MINUTES` trong `.env`, sau đó chạy:
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-Ứng dụng tạo bảng còn thiếu khi khởi động bằng `create_all()`, không tự cập nhật bảng/constraint đã tồn tại. Repo chưa có cấu hình migration. Xem [hướng dẫn cấu hình và Docker](docs/setup.md).
+Xem [hướng dẫn cấu hình và Docker](docs/setup.md).
 
 API gồm các nhóm `/api/auth`, `/api/movies`, `/api/reviews`, `/api/screens`, `/api/seats`, `/api/showtimes`, `/food` và `/orders`. Dữ liệu nghiệp vụ dùng JSON, ID dùng UUID; API cần đăng nhập dùng Bearer JWT.
 
